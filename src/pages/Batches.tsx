@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import {
@@ -35,20 +36,20 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Plus, Edit } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
+import { Batch } from '@/types';
 
 const BatchesPage = () => {
-  const { batches, addBatch, updateBatch, deleteBatch } = useAppContext();
+  const { batches, addBatch, updateBatch } = useAppContext();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [selectedBatch, setSelectedBatch] = useState(null);
+  const [selectedBatch, setSelectedBatch] = useState<Batch | null>(null);
   const [formData, setFormData] = useState({
     name: '',
-    breed: '',
     birdCount: 0,
-    batchStatus: 'Growing',
+    batchStatus: 'New' as 'New' | 'Laying' | 'Not Laying' | 'Retired',
     notes: '',
   });
 
@@ -56,17 +57,15 @@ const BatchesPage = () => {
     if (selectedBatch) {
       setFormData({
         name: selectedBatch.name,
-        breed: selectedBatch.breed,
         birdCount: selectedBatch.birdCount,
         batchStatus: selectedBatch.batchStatus,
-        notes: selectedBatch.notes,
+        notes: selectedBatch.notes || '',
       });
     } else {
       setFormData({
         name: '',
-        breed: '',
         birdCount: 0,
-        batchStatus: 'Growing',
+        batchStatus: 'New',
         notes: '',
       });
     }
@@ -83,13 +82,13 @@ const BatchesPage = () => {
   const handleStatusChange = (value: string) => {
     setFormData({
       ...formData,
-      batchStatus: value,
+      batchStatus: value as 'New' | 'Laying' | 'Not Laying' | 'Retired',
     });
   };
 
   const handleAddBatch = () => {
-    if (!formData.name || !formData.breed || !formData.birdCount) {
-      toast.error('Please fill in all fields');
+    if (!formData.name || !formData.birdCount) {
+      toast.error('Please fill in all required fields');
       return;
     }
 
@@ -97,17 +96,16 @@ const BatchesPage = () => {
     setIsDialogOpen(false);
     setFormData({
       name: '',
-      breed: '',
       birdCount: 0,
-      batchStatus: 'Growing',
+      batchStatus: 'New',
       notes: '',
     });
     toast.success('Batch added successfully');
   };
 
   const handleUpdateBatch = () => {
-    if (!formData.name || !formData.breed || !formData.birdCount) {
-      toast.error('Please fill in all fields');
+    if (!formData.name || !formData.birdCount) {
+      toast.error('Please fill in all required fields');
       return;
     }
 
@@ -117,21 +115,15 @@ const BatchesPage = () => {
       setSelectedBatch(null);
       setFormData({
         name: '',
-        breed: '',
         birdCount: 0,
-        batchStatus: 'Growing',
+        batchStatus: 'New',
         notes: '',
       });
       toast.success('Batch updated successfully');
     }
   };
 
-  const handleDeleteBatch = (batchId: string) => {
-    deleteBatch(batchId);
-    toast.success('Batch deleted successfully');
-  };
-
-  const handleEditClick = (batch: any) => {
+  const handleEditClick = (batch: Batch) => {
     setSelectedBatch(batch);
     setIsEditDialogOpen(true);
   };
@@ -141,9 +133,8 @@ const BatchesPage = () => {
     setSelectedBatch(null);
     setFormData({
       name: '',
-      breed: '',
       birdCount: 0,
-      batchStatus: 'Growing',
+      batchStatus: 'New',
       notes: '',
     });
   };
@@ -151,11 +142,13 @@ const BatchesPage = () => {
   const getStatusBadgeVariant = (status: string): "default" | "destructive" | "secondary" | "outline" => {
     switch (status) {
       case 'Laying':
-        return 'default'; // Was 'success' before which caused the TypeScript error
-      case 'Growing':
+        return 'default';
+      case 'New':
         return 'secondary';
-      case 'Inactive':
+      case 'Not Laying':
         return 'outline';
+      case 'Retired':
+        return 'destructive';
       default:
         return 'outline';
     }
@@ -193,18 +186,6 @@ const BatchesPage = () => {
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="breed" className="text-right">
-                  Breed
-                </Label>
-                <Input
-                  id="breed"
-                  name="breed"
-                  value={formData.breed}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="birdCount" className="text-right">
                   Bird Count
                 </Label>
@@ -227,9 +208,10 @@ const BatchesPage = () => {
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Growing">Growing</SelectItem>
+                    <SelectItem value="New">New</SelectItem>
                     <SelectItem value="Laying">Laying</SelectItem>
-                    <SelectItem value="Inactive">Inactive</SelectItem>
+                    <SelectItem value="Not Laying">Not Laying</SelectItem>
+                    <SelectItem value="Retired">Retired</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -267,9 +249,9 @@ const BatchesPage = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>Breed</TableHead>
                 <TableHead>Bird Count</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Created Date</TableHead>
                 <TableHead>Notes</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -279,13 +261,13 @@ const BatchesPage = () => {
                 batches.map((batch) => (
                   <TableRow key={batch.id}>
                     <TableCell>{batch.name}</TableCell>
-                    <TableCell>{batch.breed}</TableCell>
                     <TableCell>{batch.birdCount}</TableCell>
                     <TableCell>
                       <Badge variant={getStatusBadgeVariant(batch.batchStatus)}>
                         {batch.batchStatus}
                       </Badge>
                     </TableCell>
+                    <TableCell>{batch.createdAt}</TableCell>
                     <TableCell className="max-w-[200px] truncate">{batch.notes || '-'}</TableCell>
                     <TableCell className="text-right">
                       <Button
@@ -293,14 +275,7 @@ const BatchesPage = () => {
                         size="icon"
                         onClick={() => handleEditClick(batch)}
                       >
-                        <Edit className="h-4 w-4 mr-2" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeleteBatch(batch.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
+                        <Edit className="h-4 w-4" />
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -339,18 +314,6 @@ const BatchesPage = () => {
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="breed" className="text-right">
-                Breed
-              </Label>
-              <Input
-                id="breed"
-                name="breed"
-                value={formData.breed}
-                onChange={handleInputChange}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="birdCount" className="text-right">
                 Bird Count
               </Label>
@@ -368,14 +331,15 @@ const BatchesPage = () => {
               <Label htmlFor="batchStatus" className="text-right">
                 Status
               </Label>
-              <Select onValueChange={handleStatusChange}>
+              <Select onValueChange={handleStatusChange} defaultValue={formData.batchStatus}>
                 <SelectTrigger className="col-span-3">
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Growing">Growing</SelectItem>
+                  <SelectItem value="New">New</SelectItem>
                   <SelectItem value="Laying">Laying</SelectItem>
-                  <SelectItem value="Inactive">Inactive</SelectItem>
+                  <SelectItem value="Not Laying">Not Laying</SelectItem>
+                  <SelectItem value="Retired">Retired</SelectItem>
                 </SelectContent>
               </Select>
             </div>

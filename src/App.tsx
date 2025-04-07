@@ -10,6 +10,12 @@ import DashboardLayout from "./components/Layout/DashboardLayout";
 import Dashboard from "./pages/Dashboard";
 import Batches from "./pages/Batches";
 import EggCollection from "./pages/EggCollection";
+import FeedManagement from "./pages/FeedManagement";
+import Vaccination from "./pages/Vaccination";
+import Sales from "./pages/Sales";
+import Customers from "./pages/Customers";
+import CalendarPage from "./pages/CalendarPage";
+import Reports from "./pages/Reports";
 import NotFound from "./pages/NotFound";
 
 import { AppProvider } from "./context/AppContext";
@@ -50,12 +56,11 @@ const App = () => (
                   </DashboardLayout>
                 }
               />
-              {/* Placeholder routes for other pages */}
               <Route
                 path="/feed"
                 element={
                   <DashboardLayout>
-                    <div className="p-6">Feed Management content will be added soon.</div>
+                    <FeedManagement />
                   </DashboardLayout>
                 }
               />
@@ -63,7 +68,7 @@ const App = () => (
                 path="/vaccination"
                 element={
                   <DashboardLayout>
-                    <div className="p-6">Vaccination content will be added soon.</div>
+                    <Vaccination />
                   </DashboardLayout>
                 }
               />
@@ -71,7 +76,7 @@ const App = () => (
                 path="/sales"
                 element={
                   <DashboardLayout>
-                    <div className="p-6">Sales content will be added soon.</div>
+                    <Sales />
                   </DashboardLayout>
                 }
               />
@@ -79,7 +84,7 @@ const App = () => (
                 path="/customers"
                 element={
                   <DashboardLayout>
-                    <div className="p-6">Customers content will be added soon.</div>
+                    <Customers />
                   </DashboardLayout>
                 }
               />
@@ -87,7 +92,7 @@ const App = () => (
                 path="/calendar"
                 element={
                   <DashboardLayout>
-                    <div className="p-6">Calendar content will be added soon.</div>
+                    <CalendarPage />
                   </DashboardLayout>
                 }
               />
@@ -95,7 +100,7 @@ const App = () => (
                 path="/reports"
                 element={
                   <DashboardLayout>
-                    <div className="p-6">Reports content will be added soon.</div>
+                    <Reports />
                   </DashboardLayout>
                 }
               />
