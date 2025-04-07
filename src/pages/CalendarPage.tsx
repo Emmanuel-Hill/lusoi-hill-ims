@@ -1,7 +1,21 @@
 
-import React, { useState } from 'react';
-import { useAppContext } from '@/context/AppContext';
-import { Calendar } from '@/components/ui/calendar';
+import React, { useState, useEffect } from 'react';
+import {
+  add,
+  eachDayOfInterval,
+  endOfMonth,
+  format,
+  getDay,
+  isEqual,
+  isSameMonth,
+  isToday,
+  parse,
+  parseISO,
+  startOfToday,
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+} from 'date-fns';
 import {
   Card,
   CardContent,
@@ -10,348 +24,301 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from '@/components/ui/badge';
-import { format, isSameDay, parseISO, addDays } from 'date-fns';
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { CalendarIcon, Egg, Utensils, Syringe, Truck } from "lucide-react";
+import { useAppContext } from '@/context/AppContext';
+import { cn } from '@/lib/utils';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Calendar as CalendarIcon,
+  Circle,
+  Egg,
+  Package,
+  Syringe,
+} from 'lucide-react';
 
-// Helper function to categorize events
-interface CalendarEvent {
+type CalendarEvent = {
   id: string;
   date: Date;
-  type: 'egg-collection' | 'feed' | 'vaccination' | 'delivery';
   title: string;
-  details: string;
-  relatedId: string;
+  type: 'egg' | 'feed' | 'vaccination' | 'sale';
+  description?: string;
+};
+
+function classNames(...classes: (string | boolean)[]) {
+  return classes.filter(Boolean).join(' ');
 }
 
 const CalendarPage = () => {
-  const { 
-    eggCollections, 
-    feedConsumption, 
-    vaccinationRecords, 
-    orders,
-    batches,
-    feedTypes
+  const today = startOfToday();
+  const [selectedDay, setSelectedDay] = useState(today);
+  const [currentMonth, setCurrentMonth] = useState(format(today, 'MMM-yyyy'));
+  const firstDayOfMonth = parse(currentMonth, 'MMM-yyyy', new Date());
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
+  
+  const {
+    eggCollections,
+    feedConsumption,
+    vaccinationRecords,
+    sales,
+    batches
   } = useAppContext();
   
-  const [date, setDate] = useState<Date>(new Date());
-  const [selectedDay, setSelectedDay] = useState<Date>(new Date());
-  
-  // Generate calendar events from various data sources
-  const getEvents = (): CalendarEvent[] => {
+  useEffect(() => {
+    // Create calendar events from different data sources
     const events: CalendarEvent[] = [];
     
-    // Egg collections
+    // Egg collection events
     eggCollections.forEach(collection => {
+      const date = parseISO(collection.date);
       const batch = batches.find(b => b.id === collection.batchId);
       events.push({
-        id: `egg-${collection.id}`,
-        date: parseISO(collection.date),
-        type: 'egg-collection',
-        title: `Egg Collection: ${batch?.name || 'Unknown Batch'}`,
-        details: `Whole: ${collection.wholeCount}, Broken: ${collection.brokenCount}`,
-        relatedId: collection.id
+        id: collection.id,
+        date,
+        title: 'Egg Collection',
+        description: `${collection.wholeCount + collection.brokenCount} eggs collected from ${batch?.name || 'Unknown batch'}`,
+        type: 'egg'
       });
     });
     
     // Feed consumption events
-    feedConsumption.forEach(consumption => {
-      const batch = batches.find(b => b.id === consumption.batchId);
-      const feed = feedTypes.find(f => f.id === consumption.feedTypeId);
+    feedConsumption.forEach(feed => {
+      const date = parseISO(feed.date);
+      const batch = batches.find(b => b.id === feed.batchId);
       events.push({
-        id: `feed-${consumption.id}`,
-        date: parseISO(consumption.date),
-        type: 'feed',
-        title: `Feed: ${feed?.name || 'Unknown Feed'}`,
-        details: `${consumption.quantityKg}kg for ${batch?.name || 'Unknown Batch'} (${consumption.timeOfDay})`,
-        relatedId: consumption.id
+        id: feed.id,
+        date,
+        title: 'Feed Distribution',
+        description: `${feed.quantityKg}kg of feed given to ${batch?.name || 'Unknown batch'} (${feed.timeOfDay})`,
+        type: 'feed'
       });
     });
     
-    // Vaccination events (past and upcoming)
+    // Vaccination events
     vaccinationRecords.forEach(record => {
+      const date = parseISO(record.date);
       const batch = batches.find(b => b.id === record.batchId);
-      // Past vaccination
       events.push({
-        id: `vac-${record.id}`,
-        date: parseISO(record.date),
-        type: 'vaccination',
-        title: `Vaccination: ${batch?.name || 'Unknown Batch'}`,
-        details: record.notes || 'No details provided',
-        relatedId: record.id
-      });
-      
-      // Future vaccination if scheduled
-      if (record.nextScheduledDate) {
-        events.push({
-          id: `vac-next-${record.id}`,
-          date: parseISO(record.nextScheduledDate),
-          type: 'vaccination',
-          title: `Scheduled Vaccination: ${batch?.name || 'Unknown Batch'}`,
-          details: `Follow-up vaccination`,
-          relatedId: record.id
-        });
-      }
-    });
-    
-    // Delivery events (orders)
-    orders.forEach(order => {
-      events.push({
-        id: `order-${order.id}`,
-        date: parseISO(order.deliveryDate),
-        type: 'delivery',
-        title: `Delivery: ${order.deliveryLocation}`,
-        details: `Contact: ${order.contactPerson} (${order.contactNumber || 'No number'})`,
-        relatedId: order.id
+        id: record.id,
+        date,
+        title: 'Vaccination',
+        description: `Vaccinated ${batch?.name || 'Unknown batch'}`,
+        type: 'vaccination'
       });
     });
     
-    return events;
+    // Sales events
+    sales.forEach(sale => {
+      const date = parseISO(sale.date);
+      events.push({
+        id: sale.id,
+        date,
+        title: 'Sale',
+        description: `$${sale.totalAmount.toFixed(2)} sale`,
+        type: 'sale'
+      });
+    });
+    
+    setCalendarEvents(events);
+  }, [eggCollections, feedConsumption, vaccinationRecords, sales, batches]);
+  
+  const days = eachDayOfInterval({
+    start: startOfWeek(startOfMonth(firstDayOfMonth)),
+    end: endOfWeek(endOfMonth(firstDayOfMonth))
+  });
+  
+  const previousMonth = () => {
+    const firstDayOfPreviousMonth = add(firstDayOfMonth, { months: -1 });
+    setCurrentMonth(format(firstDayOfPreviousMonth, 'MMM-yyyy'));
   };
   
-  const events = getEvents();
+  const nextMonth = () => {
+    const firstDayOfNextMonth = add(firstDayOfMonth, { months: 1 });
+    setCurrentMonth(format(firstDayOfNextMonth, 'MMM-yyyy'));
+  };
   
-  // Filter events for selected day
-  const selectedDayEvents = events.filter(event => 
-    isSameDay(event.date, selectedDay)
+  const eventsForSelectedDay = calendarEvents.filter(event => 
+    isEqual(event.date, selectedDay)
   );
   
-  // Get events for the next 7 days
-  const getUpcomingEvents = () => {
-    const today = new Date();
-    const nextWeek = addDays(today, 7);
-    
-    return events
-      .filter(event => {
-        return event.date >= today && event.date <= nextWeek;
-      })
-      .sort((a, b) => a.date.getTime() - b.date.getTime());
-  };
-  
-  const upcomingEvents = getUpcomingEvents();
-  
-  // Function to render event indicator dots on calendar
-  const getDayClassNames = (day: Date) => {
-    const eventTypes = events
-      .filter(event => isSameDay(event.date, day))
-      .map(event => event.type);
-    
-    // Return class names for styling
-    let classes = '';
-    
-    if (eventTypes.includes('egg-collection')) {
-      classes += 'bg-green-500 ';
-    }
-    
-    if (eventTypes.includes('feed')) {
-      classes += 'bg-amber-500 ';
-    }
-    
-    if (eventTypes.includes('vaccination')) {
-      classes += 'bg-red-500 ';
-    }
-    
-    if (eventTypes.includes('delivery')) {
-      classes += 'bg-blue-500 ';
-    }
-    
-    return classes;
-  };
-  
-  // Function to get icon for event type
-  const getEventIcon = (type: string) => {
-    switch (type) {
-      case 'egg-collection':
-        return <Egg className="h-4 w-4" />;
-      case 'feed':
-        return <Utensils className="h-4 w-4" />;
-      case 'vaccination':
-        return <Syringe className="h-4 w-4" />;
-      case 'delivery':
-        return <Truck className="h-4 w-4" />;
-      default:
-        return <CalendarIcon className="h-4 w-4" />;
-    }
-  };
-  
-  // Function to get color for event type
-  const getEventColor = (type: string) => {
-    switch (type) {
-      case 'egg-collection':
-        return 'bg-green-100 text-green-800 border-green-300';
-      case 'feed':
-        return 'bg-amber-100 text-amber-800 border-amber-300';
-      case 'vaccination':
-        return 'bg-red-100 text-red-800 border-red-300';
-      case 'delivery':
-        return 'bg-blue-100 text-blue-800 border-blue-300';
-      default:
-        return '';
-    }
-  };
-
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">Farm Calendar</h1>
+      <h1 className="text-3xl font-bold tracking-tight">Calendar</h1>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Calendar Section */}
-        <Card className="col-span-2">
-          <CardHeader>
-            <CardTitle>Calendar</CardTitle>
-            <CardDescription>View and manage farm activities</CardDescription>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {/* Calendar */}
+        <Card className="md:col-span-3">
+          <CardHeader className="space-y-1">
+            <div className="flex items-center justify-between">
+              <CardTitle>{format(firstDayOfMonth, 'MMMM yyyy')}</CardTitle>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={previousMonth}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={nextMonth}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            <CardDescription>
+              Farm activity planner and scheduler
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={(newDate) => {
-                if (newDate) {
-                  setDate(newDate);
-                  setSelectedDay(newDate);
-                }
-              }}
-              className="rounded-md border shadow"
-              components={{
-                DayContent: ({ date, outsideCurrentMonth }) => {
-                  if (outsideCurrentMonth) return <span>{date.getDate()}</span>;
-                  
-                  const dayEvents = events.filter(event => isSameDay(event.date, date));
-                  
-                  if (dayEvents.length === 0) {
-                    return <span>{date.getDate()}</span>;
-                  }
-                  
-                  const eventTypes = [...new Set(dayEvents.map(e => e.type))];
-                  
-                  return (
-                    <div className="relative w-full h-full flex items-center justify-center">
-                      <span>{date.getDate()}</span>
-                      <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 flex space-x-0.5">
-                        {eventTypes.map((type, i) => (
-                          <div 
-                            key={`${date.toISOString()}-${type}`}
-                            className={`h-1.5 w-1.5 rounded-full ${
-                              type === 'egg-collection' ? 'bg-green-500' :
-                              type === 'feed' ? 'bg-amber-500' :
-                              type === 'vaccination' ? 'bg-red-500' :
-                              'bg-blue-500'
-                            }`}
-                          />
-                        ))}
-                      </div>
+            <div className="grid grid-cols-7 gap-px mt-2">
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                <div key={day} className="text-center text-sm font-medium text-muted-foreground py-2">
+                  {day}
+                </div>
+              ))}
+              
+              {days.map((day, dayIdx) => {
+                const eventsOnDay = calendarEvents.filter(event => 
+                  isEqual(event.date, day)
+                );
+                
+                const eventTypes = new Set(eventsOnDay.map(event => event.type));
+                
+                return (
+                  <div
+                    key={day.toString()}
+                    className={classNames(
+                      'min-h-[6rem] border border-border',
+                      !isSameMonth(day, firstDayOfMonth) && 'bg-muted/30 text-muted-foreground',
+                      isSameMonth(day, firstDayOfMonth) && 'bg-card',
+                      'p-2'
+                    )}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setSelectedDay(day)}
+                      className={cn(
+                        'mx-auto flex h-8 w-8 items-center justify-center rounded-full text-sm',
+                        isEqual(day, selectedDay) && 'bg-primary text-primary-foreground',
+                        isToday(day) && !isEqual(day, selectedDay) && 'border border-primary text-primary',
+                        'hover:bg-muted'
+                      )}
+                    >
+                      <time dateTime={format(day, 'yyyy-MM-dd')}>
+                        {format(day, 'd')}
+                      </time>
+                    </button>
+                    
+                    <div className="h-1"></div> {/* Spacing */}
+                    
+                    <div className="space-y-1">
+                      {eventTypes.has('egg') && (
+                        <div className="flex items-center gap-1 text-xs text-green-600">
+                          <Egg className="h-3 w-3" />
+                          <span>
+                            {eventsOnDay.filter(e => e.type === 'egg').length} collections
+                          </span>
+                        </div>
+                      )}
+                      
+                      {eventTypes.has('feed') && (
+                        <div className="flex items-center gap-1 text-xs text-amber-600">
+                          <Package className="h-3 w-3" />
+                          <span>
+                            {eventsOnDay.filter(e => e.type === 'feed').length} feeds
+                          </span>
+                        </div>
+                      )}
+                      
+                      {eventTypes.has('vaccination') && (
+                        <div className="flex items-center gap-1 text-xs text-blue-600">
+                          <Syringe className="h-3 w-3" />
+                          <span>
+                            {eventsOnDay.filter(e => e.type === 'vaccination').length} vaccinations
+                          </span>
+                        </div>
+                      )}
+                      
+                      {eventTypes.has('sale') && (
+                        <div className="flex items-center gap-1 text-xs text-purple-600">
+                          <Circle className="h-3 w-3" />
+                          <span>
+                            {eventsOnDay.filter(e => e.type === 'sale').length} sales
+                          </span>
+                        </div>
+                      )}
                     </div>
-                  );
-                },
-              }}
-            />
+                  </div>
+                );
+              })}
+            </div>
+            
+            <div className="flex flex-wrap gap-4 mt-6 justify-center">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-green-600"></div>
+                <span className="text-sm">Egg Collection</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-amber-600"></div>
+                <span className="text-sm">Feed Distribution</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-blue-600"></div>
+                <span className="text-sm">Vaccination</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-purple-600"></div>
+                <span className="text-sm">Sale</span>
+              </div>
+            </div>
           </CardContent>
         </Card>
         
-        {/* Event details section */}
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                Events for {format(selectedDay, 'MMMM d, yyyy')}
-              </CardTitle>
-              <CardDescription>
-                Activities scheduled for this day
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {selectedDayEvents.length > 0 ? (
-                <div className="space-y-3">
-                  {selectedDayEvents.map((event) => (
-                    <div 
-                      key={event.id}
-                      className={`p-3 rounded-md border ${getEventColor(event.type)}`}
-                    >
-                      <div className="flex items-center space-x-2">
-                        {getEventIcon(event.type)}
-                        <span className="font-medium">{event.title}</span>
-                      </div>
-                      <p className="text-sm mt-1">{event.details}</p>
+        {/* Selected day events */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CalendarIcon className="h-5 w-5" />
+              <span>{format(selectedDay, 'MMMM d, yyyy')}</span>
+            </CardTitle>
+            <CardDescription>
+              {isToday(selectedDay) ? "Today's events" : "Events for selected day"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {eventsForSelectedDay.length > 0 ? (
+              <div className="space-y-4">
+                {eventsForSelectedDay.map(event => (
+                  <div key={event.id} className="border rounded-md p-3 bg-card">
+                    <div className="flex items-center">
+                      {event.type === 'egg' && <Egg className="h-4 w-4 text-green-600 mr-2" />}
+                      {event.type === 'feed' && <Package className="h-4 w-4 text-amber-600 mr-2" />}
+                      {event.type === 'vaccination' && <Syringe className="h-4 w-4 text-blue-600 mr-2" />}
+                      {event.type === 'sale' && <Circle className="h-4 w-4 text-purple-600 mr-2" />}
+                      <h4 className="font-medium">{event.title}</h4>
                     </div>
-                  ))}
+                    {event.description && (
+                      <p className="text-sm text-muted-foreground mt-1">{event.description}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-40 text-center">
+                <div className="text-muted-foreground">
+                  <p>No events scheduled for this day</p>
+                  <p className="text-sm mt-1">
+                    Activities will appear here when scheduled
+                  </p>
                 </div>
-              ) : (
-                <div className="text-center py-6 text-muted-foreground">
-                  No events scheduled for this day.
-                </div>
-              )}
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Upcoming Events</CardTitle>
-              <CardDescription>Next 7 days</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {upcomingEvents.length > 0 ? (
-                <div className="space-y-3">
-                  {upcomingEvents.map((event) => (
-                    <div 
-                      key={event.id}
-                      className="flex items-start p-2 hover:bg-muted/50 rounded-md transition-colors"
-                    >
-                      <div className={`p-2 rounded-full mr-2 ${
-                        event.type === 'egg-collection' ? 'bg-green-100' :
-                        event.type === 'feed' ? 'bg-amber-100' :
-                        event.type === 'vaccination' ? 'bg-red-100' :
-                        'bg-blue-100'
-                      }`}>
-                        {getEventIcon(event.type)}
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">{event.title}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {format(event.date, 'MMM d, yyyy')}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-6 text-muted-foreground">
-                  No upcoming events in the next 7 days.
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Event Legend</CardTitle>
-          <CardDescription>Types of events in the calendar</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-4">
-            <div className="flex items-center">
-              <div className="h-3 w-3 rounded-full bg-green-500 mr-2"></div>
-              <span className="text-sm">Egg Collection</span>
-            </div>
-            <div className="flex items-center">
-              <div className="h-3 w-3 rounded-full bg-amber-500 mr-2"></div>
-              <span className="text-sm">Feed</span>
-            </div>
-            <div className="flex items-center">
-              <div className="h-3 w-3 rounded-full bg-red-500 mr-2"></div>
-              <span className="text-sm">Vaccination</span>
-            </div>
-            <div className="flex items-center">
-              <div className="h-3 w-3 rounded-full bg-blue-500 mr-2"></div>
-              <span className="text-sm">Delivery</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };
