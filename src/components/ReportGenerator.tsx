@@ -52,7 +52,8 @@ const ReportGenerator = () => {
     vaccines,
     sales,
     products,
-    customers
+    customers,
+    orders
   } = useAppContext();
 
   const handleGenerateReport = () => {
@@ -75,7 +76,7 @@ const ReportGenerator = () => {
           generateSalesReport(sales, products, customers, format);
           break;
         case 'customers':
-          generateCustomerReport(customers, sales, format);
+          generateCustomerReport(customers, sales, orders, format);
           break;
       }
       
