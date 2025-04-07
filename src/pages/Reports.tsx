@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Card,
@@ -8,7 +7,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import ReportGenerator from '@/components/ReportGenerator';
-import { FileText, FileSpreadsheet, FilePdf, BarChart, PieChart } from 'lucide-react';
+import { FileText, File, BarChart, PieChart } from 'lucide-react';
 
 const Reports = () => {
   return (
@@ -31,7 +30,7 @@ const Reports = () => {
             <Card className="bg-green-50/50 border-green-200">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <FileSpreadsheet className="h-5 w-5 text-green-600" />
+                  <File className="h-5 w-5 text-green-600" />
                   Excel Reports
                 </CardTitle>
               </CardHeader>
@@ -59,7 +58,7 @@ const Reports = () => {
             <Card className="bg-orange-50/50 border-orange-200">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <FilePdf className="h-5 w-5 text-orange-600" />
+                  <FileText className="h-5 w-5 text-orange-600" />
                   PDF Reports
                 </CardTitle>
               </CardHeader>

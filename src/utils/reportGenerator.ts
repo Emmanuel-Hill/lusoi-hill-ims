@@ -261,7 +261,9 @@ export const generateFeedManagementReport = (
     
     doc.autoTable({
       head: [consumptionColumns.map(col => col.header)],
-      body: consumptionData.map(row => consumptionColumns.map(col => row[col.dataKey as keyof typeof row])),
+      body: consumptionData.map(row => 
+        consumptionColumns.map(col => row[col.dataKey as keyof typeof row])
+      ),
       startY: y,
       styles: { fontSize: 9, cellPadding: 2 },
       headStyles: { fillColor: [60, 108, 64] }
@@ -282,7 +284,9 @@ export const generateFeedManagementReport = (
     
     doc.autoTable({
       head: [inventoryColumns.map(col => col.header)],
-      body: inventoryData.map(row => inventoryColumns.map(col => row[col.dataKey as keyof typeof row])),
+      body: inventoryData.map(row => 
+        inventoryColumns.map(col => row[col.dataKey as keyof typeof row])
+      ),
       startY: y,
       styles: { fontSize: 9, cellPadding: 2 },
       headStyles: { fillColor: [60, 108, 64] }
@@ -424,7 +428,9 @@ export const generateSalesReport = (
     
     doc.autoTable({
       head: [summaryColumns.map(col => col.header)],
-      body: summaryData.map(row => summaryColumns.map(col => row[col.dataKey as keyof typeof row])),
+      body: summaryData.map(row => 
+        summaryColumns.map(col => row[col.dataKey as keyof typeof row])
+      ),
       startY: y,
       styles: { fontSize: 9, cellPadding: 2 },
       headStyles: { fillColor: [60, 108, 64] }
@@ -469,7 +475,9 @@ export const generateSalesReport = (
     
     doc.autoTable({
       head: [detailsColumns.map(col => col.header)],
-      body: detailsData.map(row => detailsColumns.map(col => row[col.dataKey])),
+      body: detailsData.map(row => 
+        detailsColumns.map(col => row[col.dataKey])
+      ),
       startY: y,
       styles: { fontSize: 9, cellPadding: 2 },
       headStyles: { fillColor: [60, 108, 64] }

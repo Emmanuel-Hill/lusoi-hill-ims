@@ -154,11 +154,11 @@ const Vaccination = () => {
     setRecordForm({
       ...recordForm,
       vaccineId: value,
-    }, () => {
-      if (recordForm.date) {
-        calculateNextScheduledDate();
-      }
     });
+    
+    if (recordForm.date) {
+      calculateNextScheduledDate();
+    }
   };
   
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -22,8 +22,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from 'sonner';
 import {
   FileText,
-  FileSpreadsheet,
-  FilePdf,
+  File,
   Download
 } from 'lucide-react';
 import {
@@ -145,7 +144,7 @@ const ReportGenerator = () => {
                   className="flex-1 gap-2"
                   onClick={() => setFormat('excel')}
                 >
-                  <FileSpreadsheet className="h-4 w-4" />
+                  <File className="h-4 w-4" />
                   Excel
                 </Button>
                 <Button
@@ -154,7 +153,7 @@ const ReportGenerator = () => {
                   className="flex-1 gap-2"
                   onClick={() => setFormat('pdf')}
                 >
-                  <FilePdf className="h-4 w-4" />
+                  <FileText className="h-4 w-4" />
                   PDF
                 </Button>
               </div>
