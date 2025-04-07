@@ -49,8 +49,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         <div className="flex h-full flex-col">
           <div className="flex items-center justify-between px-4 py-6">
             <Link to="/" className="flex items-center space-x-2">
-              <Egg className="h-8 w-8 text-primary" />
-              <span className="text-2xl font-bold text-primary">EggTrack</span>
+              <img
+                src="/lovable-uploads/8e4f7677-da9e-4d55-ba63-b3aab359f60b.png"
+                alt="Lusoi Logo"
+                className="h-10 w-auto"
+              />
+              <span className="text-2xl font-bold text-lusoi-500">Lusoi</span>
             </Link>
             <Button
               variant="ghost"
@@ -72,16 +76,16 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                   className={cn(
                     "group flex items-center px-2 py-2 text-sm font-medium rounded-md",
                     isActive
-                      ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                      : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                      ? "bg-lusoi-500 text-white"
+                      : "text-sidebar-foreground hover:bg-lusoi-100 hover:text-lusoi-700"
                   )}
                 >
                   <item.icon
                     className={cn(
                       "mr-3 h-5 w-5",
                       isActive
-                        ? "text-sidebar-primary-foreground"
-                        : "text-sidebar-foreground group-hover:text-sidebar-accent-foreground"
+                        ? "text-white"
+                        : "text-lusoi-500 group-hover:text-lusoi-700"
                     )}
                   />
                   {item.name}
@@ -92,10 +96,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
           <div className="border-t border-sidebar-border p-4">
             <div className="text-xs font-semibold text-sidebar-foreground">
-              EggTrack Poultry Management
+              Lusoi Poultry Management
             </div>
             <div className="mt-1 text-xs text-sidebar-foreground/70">
-              © 2024 All rights reserved
+              © 2025 All rights reserved
             </div>
           </div>
         </div>
