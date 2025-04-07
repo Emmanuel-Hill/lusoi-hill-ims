@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import {
@@ -172,9 +171,9 @@ const Reports = () => {
         total: counts.whole + counts.broken,
       }))
       .sort((a, b) => {
-        // Sort by date
-        const dateA = parseISO(date);
-        const dateB = parseISO(date);
+        // Sort by date - Fixed the reference to date variables
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
         return dateA.getTime() - dateB.getTime();
       });
   };

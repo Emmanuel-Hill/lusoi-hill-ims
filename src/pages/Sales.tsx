@@ -122,7 +122,13 @@ const Sales = () => {
       return;
     }
 
-    addProduct(productForm);
+    // Add priceUpdatedAt field to match the Product type requirements
+    const productData = {
+      ...productForm,
+      priceUpdatedAt: new Date().toISOString().split('T')[0]
+    };
+
+    addProduct(productData);
     setProductForm({
       name: '',
       type: 'Egg',
@@ -515,7 +521,7 @@ const Sales = () => {
                         <SelectValue placeholder="Select customer (optional)" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Walk-in Customer</SelectItem>
+                        <SelectItem value="walkin">Walk-in Customer</SelectItem>
                         {customers.map((customer) => (
                           <SelectItem key={customer.id} value={customer.id}>{customer.name}</SelectItem>
                         ))}
