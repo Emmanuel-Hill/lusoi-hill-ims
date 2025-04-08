@@ -826,4 +826,3 @@ export const generateCustomerReport = (
     doc.save(`lusoi_customer_report_${currentDate}.pdf`);
   }
 };
-
