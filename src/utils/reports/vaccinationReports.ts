@@ -106,10 +106,11 @@ export const generateVaccinationReport = (
     doc.text('Vaccination Records', 14, y);
     y += 10;
     
+    // Fix: Convert String to string primitive
     doc.autoTable({
       head: [recordsColumns.map(col => col.header)],
       body: recordsData.map(row => {
-        return recordsColumns.map(col => row[col.dataKey as keyof typeof row]);
+        return recordsColumns.map(col => String(row[col.dataKey as keyof typeof row]));
       }),
       startY: y,
       styles: { fontSize: 9, cellPadding: 2 },
@@ -129,10 +130,11 @@ export const generateVaccinationReport = (
     doc.text('Vaccines Catalog', 14, y);
     y += 10;
     
+    // Fix: Convert String to string primitive
     doc.autoTable({
       head: [vaccinesColumns.map(col => col.header)],
       body: vaccinesData.map(row => {
-        return vaccinesColumns.map(col => row[col.dataKey as keyof typeof row]);
+        return vaccinesColumns.map(col => String(row[col.dataKey as keyof typeof row]));
       }),
       startY: y,
       styles: { fontSize: 9, cellPadding: 2 },
@@ -152,10 +154,11 @@ export const generateVaccinationReport = (
     doc.text('Upcoming Vaccinations', 14, y);
     y += 10;
     
+    // Fix: Convert String to string primitive
     doc.autoTable({
       head: [upcomingColumns.map(col => col.header)],
       body: upcomingVaccinations.map(row => {
-        return upcomingColumns.map(col => row[col.dataKey as keyof typeof row]);
+        return upcomingColumns.map(col => String(row[col.dataKey as keyof typeof row]));
       }),
       startY: y,
       styles: { fontSize: 9, cellPadding: 2 },
@@ -167,3 +170,4 @@ export const generateVaccinationReport = (
     doc.save(`lusoi_vaccination_report_${currentDate}.pdf`);
   }
 };
+

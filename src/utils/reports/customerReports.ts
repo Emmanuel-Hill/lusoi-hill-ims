@@ -103,10 +103,11 @@ export const generateCustomerReport = (
     doc.text('Customers', 14, y);
     y += 10;
     
+    // Fix: Convert String to string primitive
     doc.autoTable({
       head: [customerColumns.map(col => col.header)],
       body: customerData.map(row => {
-        return customerColumns.map(col => row[col.dataKey as keyof typeof row]);
+        return customerColumns.map(col => String(row[col.dataKey as keyof typeof row]));
       }),
       startY: y,
       styles: { fontSize: 8, cellPadding: 2 },
@@ -122,10 +123,11 @@ export const generateCustomerReport = (
     doc.text('Orders', 14, y);
     y += 10;
     
+    // Fix: Convert String to string primitive
     doc.autoTable({
       head: [orderColumns.map(col => col.header)],
       body: ordersData.map(row => {
-        return orderColumns.map(col => row[col.dataKey as keyof typeof row]);
+        return orderColumns.map(col => String(row[col.dataKey as keyof typeof row]));
       }),
       startY: y,
       styles: { fontSize: 9, cellPadding: 2 },
@@ -137,3 +139,4 @@ export const generateCustomerReport = (
     doc.save(`lusoi_customer_report_${currentDate}.pdf`);
   }
 };
+

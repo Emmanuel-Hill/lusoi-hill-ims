@@ -105,10 +105,11 @@ export const generateFeedManagementReport = (
     doc.text('Feed Types', 14, y);
     y += 10;
     
+    // Fix: Convert String to string primitive
     doc.autoTable({
       head: [feedTypeColumns.map(col => col.header)],
       body: feedTypesData.map(row => {
-        return feedTypeColumns.map(col => row[col.dataKey as keyof typeof row]);
+        return feedTypeColumns.map(col => String(row[col.dataKey as keyof typeof row]));
       }),
       startY: y,
       styles: { fontSize: 9, cellPadding: 2 },
@@ -128,10 +129,11 @@ export const generateFeedManagementReport = (
     doc.text('Feed Consumption', 14, y);
     y += 10;
     
+    // Fix: Convert String to string primitive
     doc.autoTable({
       head: [consumptionColumns.map(col => col.header)],
       body: consumptionData.map(row => {
-        return consumptionColumns.map(col => row[col.dataKey as keyof typeof row]);
+        return consumptionColumns.map(col => String(row[col.dataKey as keyof typeof row]));
       }),
       startY: y,
       styles: { fontSize: 9, cellPadding: 2 },
@@ -151,10 +153,11 @@ export const generateFeedManagementReport = (
     doc.text('Feed Inventory', 14, y);
     y += 10;
     
+    // Fix: Convert String to string primitive
     doc.autoTable({
       head: [inventoryColumns.map(col => col.header)],
       body: inventoryData.map(row => {
-        return inventoryColumns.map(col => row[col.dataKey as keyof typeof row]);
+        return inventoryColumns.map(col => String(row[col.dataKey as keyof typeof row]));
       }),
       startY: y,
       styles: { fontSize: 9, cellPadding: 2 },
@@ -166,3 +169,4 @@ export const generateFeedManagementReport = (
     doc.save(`lusoi_feed_management_report_${currentDate}.pdf`);
   }
 };
+

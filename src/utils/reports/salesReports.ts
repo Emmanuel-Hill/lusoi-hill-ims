@@ -110,10 +110,11 @@ export const generateSalesReport = (
     doc.text('Products Catalog', 14, y);
     y += 10;
     
+    // Fix: Convert String to string primitive
     doc.autoTable({
       head: [productsColumns.map(col => col.header)],
       body: productsData.map(row => {
-        return productsColumns.map(col => row[col.dataKey as keyof typeof row]);
+        return productsColumns.map(col => String(row[col.dataKey as keyof typeof row]));
       }),
       startY: y,
       styles: { fontSize: 9, cellPadding: 2 },
@@ -144,10 +145,11 @@ export const generateSalesReport = (
       date, customerName, totalAmount: `$${totalAmount.toFixed(2)}`, notes
     }));
     
+    // Fix: Convert String to string primitive
     doc.autoTable({
       head: [summaryColumns.map(col => col.header)],
       body: summaryData.map(row => {
-        return summaryColumns.map(col => row[col.dataKey as keyof typeof row]);
+        return summaryColumns.map(col => String(row[col.dataKey as keyof typeof row]));
       }),
       startY: y,
       styles: { fontSize: 9, cellPadding: 2 },
@@ -186,10 +188,11 @@ export const generateSalesReport = (
       { header: 'Subtotal', dataKey: 'subtotal' }
     ];
     
+    // Fix: Convert String to string primitive
     doc.autoTable({
       head: [detailsColumns.map(col => col.header)],
       body: detailsData.map(row => {
-        return detailsColumns.map(col => row[col.dataKey]);
+        return detailsColumns.map(col => String(row[col.dataKey]));
       }),
       startY: y,
       styles: { fontSize: 9, cellPadding: 2 },
@@ -201,3 +204,4 @@ export const generateSalesReport = (
     doc.save(`lusoi_sales_report_${currentDate}.pdf`);
   }
 };
+
