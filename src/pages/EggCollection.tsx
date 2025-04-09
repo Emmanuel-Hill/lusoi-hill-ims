@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { 
@@ -40,7 +39,7 @@ import {
   Egg, 
   Plus, 
   FileSpreadsheet, 
-  FilePdf 
+  FileText 
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { generateEggCollectionReport } from '@/utils/reportGenerator';
@@ -50,6 +49,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import ReportButton from '@/components/ReportButton';
 
 const EggCollectionPage = () => {
   const { batches, eggCollections, addEggCollection } = useAppContext();
@@ -124,23 +124,10 @@ const EggCollectionPage = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Egg Collection</h1>
         <div className="flex space-x-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                Reports
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => handleGenerateReport('excel')}>
-                <FileSpreadsheet className="mr-2 h-4 w-4" />
-                Export to Excel
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleGenerateReport('pdf')}>
-                <FilePdf className="mr-2 h-4 w-4" />
-                Export to PDF
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <ReportButton 
+            onExcelExport={() => handleGenerateReport('excel')} 
+            onPdfExport={() => handleGenerateReport('pdf')} 
+          />
           
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>

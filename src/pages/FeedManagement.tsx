@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import {
@@ -43,10 +42,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, FileSpreadsheet, FilePdf } from 'lucide-react';
+import { Plus, FileSpreadsheet, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { generateFeedManagementReport } from '@/utils/reportGenerator';
+import ReportButton from '@/components/ReportButton';
 
 const FeedManagement = () => {
   const { 
@@ -198,23 +198,10 @@ const FeedManagement = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Feed Management</h1>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline">
-              Reports
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => handleGenerateReport('excel')}>
-              <FileSpreadsheet className="mr-2 h-4 w-4" />
-              Export to Excel
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleGenerateReport('pdf')}>
-              <FilePdf className="mr-2 h-4 w-4" />
-              Export to PDF
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <ReportButton 
+          onExcelExport={() => handleGenerateReport('excel')} 
+          onPdfExport={() => handleGenerateReport('pdf')} 
+        />
       </div>
       
       <Tabs defaultValue="types" className="w-full">
