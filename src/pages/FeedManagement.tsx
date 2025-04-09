@@ -30,7 +30,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Select,
   SelectContent,
@@ -38,9 +37,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Plus, FileSpreadsheet, FilePdf } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
+import { generateFeedManagementReport } from '@/utils/reportGenerator';
 
 const FeedManagement = () => {
   const { 
@@ -76,6 +82,16 @@ const FeedManagement = () => {
     timeOfDay: 'Morning' as 'Morning' | 'Afternoon' | 'Evening',
     notes: ''
   });
+
+  const handleGenerateReport = (format: 'excel' | 'pdf') => {
+    try {
+      generateFeedManagementReport(feedConsumption, feedInventory, feedTypes, batches, format);
+      toast.success(`Feed management report generated successfully (${format.toUpperCase()})`);
+    } catch (error) {
+      console.error('Error generating report:', error);
+      toast.error('Failed to generate report');
+    }
+  };
 
   const handleFeedTypeChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -180,7 +196,26 @@ const FeedManagement = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">Feed Management</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold tracking-tight">Feed Management</h1>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline">
+              Reports
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => handleGenerateReport('excel')}>
+              <FileSpreadsheet className="mr-2 h-4 w-4" />
+              Export to Excel
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleGenerateReport('pdf')}>
+              <FilePdf className="mr-2 h-4 w-4" />
+              Export to PDF
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
       
       <Tabs defaultValue="types" className="w-full">
         <TabsList className="grid grid-cols-3 w-full mb-4">

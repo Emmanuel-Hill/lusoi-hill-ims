@@ -36,8 +36,20 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Egg, Plus } from 'lucide-react';
+import { 
+  Egg, 
+  Plus, 
+  FileSpreadsheet, 
+  FilePdf 
+} from 'lucide-react';
 import { toast } from 'sonner';
+import { generateEggCollectionReport } from '@/utils/reportGenerator';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const EggCollectionPage = () => {
   const { batches, eggCollections, addEggCollection } = useAppContext();
@@ -83,6 +95,16 @@ const EggCollectionPage = () => {
     toast.success('Egg collection recorded successfully');
   };
 
+  const handleGenerateReport = (format: 'excel' | 'pdf') => {
+    try {
+      generateEggCollectionReport(eggCollections, batches, format);
+      toast.success(`Egg collection report generated successfully (${format.toUpperCase()})`);
+    } catch (error) {
+      console.error('Error generating report:', error);
+      toast.error('Failed to generate report');
+    }
+  };
+
   // Get only laying batches for the selection
   const layingBatches = batches.filter(batch => batch.batchStatus === 'Laying');
 
@@ -101,107 +123,127 @@ const EggCollectionPage = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Egg Collection</h1>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Record Collection
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Record Egg Collection</DialogTitle>
-              <DialogDescription>
-                Enter the details of your egg collection.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="batch" className="text-right">
-                  Batch
-                </Label>
-                <Select onValueChange={handleBatchChange}>
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Select batch" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {layingBatches.length > 0 ? (
-                      layingBatches.map(batch => (
-                        <SelectItem key={batch.id} value={batch.id}>
-                          {batch.name} ({batch.birdCount} birds)
-                        </SelectItem>
-                      ))
-                    ) : (
-                      <SelectItem value="none" disabled>
-                        No laying batches available
-                      </SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="date" className="text-right">
-                  Date
-                </Label>
-                <Input
-                  id="date"
-                  name="date"
-                  type="date"
-                  value={formData.date}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="wholeCount" className="text-right">
-                  Whole Eggs
-                </Label>
-                <Input
-                  id="wholeCount"
-                  name="wholeCount"
-                  type="number"
-                  min="0"
-                  value={formData.wholeCount}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="brokenCount" className="text-right">
-                  Broken Eggs
-                </Label>
-                <Input
-                  id="brokenCount"
-                  name="brokenCount"
-                  type="number"
-                  min="0"
-                  value={formData.brokenCount}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="notes" className="text-right">
-                  Notes
-                </Label>
-                <Textarea
-                  id="notes"
-                  name="notes"
-                  value={formData.notes}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                  placeholder="Additional notes"
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Cancel
+        <div className="flex space-x-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                Reports
               </Button>
-              <Button onClick={handleAddCollection}>Record Collection</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => handleGenerateReport('excel')}>
+                <FileSpreadsheet className="mr-2 h-4 w-4" />
+                Export to Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleGenerateReport('pdf')}>
+                <FilePdf className="mr-2 h-4 w-4" />
+                Export to PDF
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Record Collection
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Record Egg Collection</DialogTitle>
+                <DialogDescription>
+                  Enter the details of your egg collection.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="batch" className="text-right">
+                    Batch
+                  </Label>
+                  <Select onValueChange={handleBatchChange}>
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Select batch" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {layingBatches.length > 0 ? (
+                        layingBatches.map(batch => (
+                          <SelectItem key={batch.id} value={batch.id}>
+                            {batch.name} ({batch.birdCount} birds)
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="none" disabled>
+                          No laying batches available
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="date" className="text-right">
+                    Date
+                  </Label>
+                  <Input
+                    id="date"
+                    name="date"
+                    type="date"
+                    value={formData.date}
+                    onChange={handleInputChange}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="wholeCount" className="text-right">
+                    Whole Eggs
+                  </Label>
+                  <Input
+                    id="wholeCount"
+                    name="wholeCount"
+                    type="number"
+                    min="0"
+                    value={formData.wholeCount}
+                    onChange={handleInputChange}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="brokenCount" className="text-right">
+                    Broken Eggs
+                  </Label>
+                  <Input
+                    id="brokenCount"
+                    name="brokenCount"
+                    type="number"
+                    min="0"
+                    value={formData.brokenCount}
+                    onChange={handleInputChange}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="notes" className="text-right">
+                    Notes
+                  </Label>
+                  <Textarea
+                    id="notes"
+                    name="notes"
+                    value={formData.notes}
+                    onChange={handleInputChange}
+                    className="col-span-3"
+                    placeholder="Additional notes"
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleAddCollection}>Record Collection</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">

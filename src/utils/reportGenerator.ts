@@ -275,7 +275,7 @@ export const generateFeedManagementReport = (
     doc.autoTable({
       head: [feedTypeColumns.map(col => col.header)],
       body: feedTypesData.map(row => {
-        return feedTypeColumns.map(col => row[col.dataKey as keyof typeof row]);
+        return feedTypeColumns.map(col => String(row[col.dataKey as keyof typeof row]));
       }),
       startY: y,
       styles: { fontSize: 9, cellPadding: 2 },
@@ -298,7 +298,7 @@ export const generateFeedManagementReport = (
     doc.autoTable({
       head: [consumptionColumns.map(col => col.header)],
       body: consumptionData.map(row => {
-        return consumptionColumns.map(col => row[col.dataKey as keyof typeof row]);
+        return consumptionColumns.map(col => String(row[col.dataKey as keyof typeof row]));
       }),
       startY: y,
       styles: { fontSize: 9, cellPadding: 2 },
@@ -321,7 +321,7 @@ export const generateFeedManagementReport = (
     doc.autoTable({
       head: [inventoryColumns.map(col => col.header)],
       body: inventoryData.map(row => {
-        return inventoryColumns.map(col => row[col.dataKey as keyof typeof row]);
+        return inventoryColumns.map(col => String(row[col.dataKey as keyof typeof row]));
       }),
       startY: y,
       styles: { fontSize: 9, cellPadding: 2 },
@@ -438,7 +438,7 @@ export const generateVaccinationReport = (
     doc.autoTable({
       head: [recordsColumns.map(col => col.header)],
       body: recordsData.map(row => {
-        return recordsColumns.map(col => row[col.dataKey as keyof typeof row]);
+        return recordsColumns.map(col => String(row[col.dataKey as keyof typeof row]));
       }),
       startY: y,
       styles: { fontSize: 9, cellPadding: 2 },
@@ -461,7 +461,7 @@ export const generateVaccinationReport = (
     doc.autoTable({
       head: [vaccinesColumns.map(col => col.header)],
       body: vaccinesData.map(row => {
-        return vaccinesColumns.map(col => row[col.dataKey as keyof typeof row]);
+        return vaccinesColumns.map(col => String(row[col.dataKey as keyof typeof row]));
       }),
       startY: y,
       styles: { fontSize: 9, cellPadding: 2 },
@@ -484,7 +484,7 @@ export const generateVaccinationReport = (
     doc.autoTable({
       head: [upcomingColumns.map(col => col.header)],
       body: upcomingVaccinations.map(row => {
-        return upcomingColumns.map(col => row[col.dataKey as keyof typeof row]);
+        return upcomingColumns.map(col => String(row[col.dataKey as keyof typeof row]));
       }),
       startY: y,
       styles: { fontSize: 9, cellPadding: 2 },
@@ -605,7 +605,7 @@ export const generateSalesReport = (
     doc.autoTable({
       head: [productsColumns.map(col => col.header)],
       body: productsData.map(row => {
-        return productsColumns.map(col => row[col.dataKey as keyof typeof row]);
+        return productsColumns.map(col => String(row[col.dataKey as keyof typeof row]));
       }),
       startY: y,
       styles: { fontSize: 9, cellPadding: 2 },
@@ -639,7 +639,7 @@ export const generateSalesReport = (
     doc.autoTable({
       head: [summaryColumns.map(col => col.header)],
       body: summaryData.map(row => {
-        return summaryColumns.map(col => row[col.dataKey as keyof typeof row]);
+        return summaryColumns.map(col => String(row[col.dataKey as keyof typeof row]));
       }),
       startY: y,
       styles: { fontSize: 9, cellPadding: 2 },
@@ -681,7 +681,7 @@ export const generateSalesReport = (
     doc.autoTable({
       head: [detailsColumns.map(col => col.header)],
       body: detailsData.map(row => {
-        return detailsColumns.map(col => row[col.dataKey]);
+        return detailsColumns.map(col => String(row[col.dataKey]));
       }),
       startY: y,
       styles: { fontSize: 9, cellPadding: 2 },
@@ -795,7 +795,7 @@ export const generateCustomerReport = (
     doc.autoTable({
       head: [customerColumns.map(col => col.header)],
       body: customerData.map(row => {
-        return customerColumns.map(col => row[col.dataKey as keyof typeof row]);
+        return customerColumns.map(col => String(row[col.dataKey as keyof typeof row]));
       }),
       startY: y,
       styles: { fontSize: 8, cellPadding: 2 },
@@ -814,7 +814,7 @@ export const generateCustomerReport = (
     doc.autoTable({
       head: [orderColumns.map(col => col.header)],
       body: ordersData.map(row => {
-        return orderColumns.map(col => row[col.dataKey as keyof typeof row]);
+        return orderColumns.map(col => String(row[col.dataKey as keyof typeof row]));
       }),
       startY: y,
       styles: { fontSize: 9, cellPadding: 2 },
