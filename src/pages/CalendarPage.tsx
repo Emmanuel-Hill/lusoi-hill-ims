@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   add,
@@ -36,6 +35,7 @@ import {
   Package,
   Syringe,
 } from 'lucide-react';
+import ReportButton from '@/components/ReportButton';
 
 type CalendarEvent = {
   id: string;
@@ -141,9 +141,144 @@ const CalendarPage = () => {
     isEqual(event.date, selectedDay)
   );
   
+  // Add calendar report generation handler
+  const handleGenerateReport = (format: 'excel' | 'pdf') => {
+    try {
+      // Create a report specifically for calendar events in the current month
+      const firstDay = startOfMonth(firstDayOfMonth);
+      const lastDay = endOfMonth(firstDayOfMonth);
+      
+      // Filter events for current month
+      const monthEvents = calendarEvents.filter(event => {
+        const eventDate = event.date;
+        return eventDate >= firstDay && eventDate <= lastDay;
+      });
+      
+      // Get events by type
+      const eggEvents = monthEvents.filter(event => event.type === 'egg').length;
+      const feedEvents = monthEvents.filter(event => event.type === 'feed').length;
+      const vaccinationEvents = monthEvents.filter(event => event.type === 'vaccination').length;
+      const saleEvents = monthEvents.filter(event => event.type === 'sale').length;
+      
+      // Create summary report data
+      const reportData = [
+        {
+          month: format(firstDayOfMonth, 'MMMM yyyy'),
+          totalEvents: monthEvents.length,
+          eggCollections: eggEvents,
+          feedDistributions: feedEvents,
+          vaccinations: vaccinationEvents,
+          sales: saleEvents
+        }
+      ];
+      
+      // Use XLSX to export to Excel
+      if (format === 'excel') {
+        const XLSX = require('xlsx');
+        const worksheet = XLSX.utils.json_to_sheet(reportData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Calendar Summary');
+        
+        // Add event details sheet
+        const eventsData = monthEvents.map(event => ({
+          date: format(event.date, 'yyyy-MM-dd'),
+          title: event.title,
+          type: event.type,
+          description: event.description || ''
+        }));
+        const eventsWorksheet = XLSX.utils.json_to_sheet(eventsData);
+        XLSX.utils.book_append_sheet(workbook, eventsWorksheet, 'Events');
+        
+        // Generate filename and save
+        const currentDate = format(new Date(), 'yyyy-MM-dd');
+        XLSX.writeFile(workbook, `calendar_report_${currentDate}.xlsx`);
+      } else {
+        // Use jsPDF for PDF export
+        const jsPDF = require('jspdf');
+        const doc = new jsPDF();
+        
+        // Add title
+        doc.setFontSize(18);
+        doc.text('Calendar Report', 14, 20);
+        doc.setFontSize(12);
+        doc.text(`Month: ${format(firstDayOfMonth, 'MMMM yyyy')}`, 14, 30);
+        doc.text(`Generated on: ${format(new Date(), 'MMMM dd, yyyy')}`, 14, 37);
+        
+        // Add summary table
+        doc.setFontSize(14);
+        doc.text('Monthly Summary', 14, 50);
+        
+        doc.setFontSize(10);
+        doc.text('Total Events:', 20, 60);
+        doc.text(String(monthEvents.length), 80, 60);
+        doc.text('Egg Collections:', 20, 67);
+        doc.text(String(eggEvents), 80, 67);
+        doc.text('Feed Distributions:', 20, 74);
+        doc.text(String(feedEvents), 80, 74);
+        doc.text('Vaccinations:', 20, 81);
+        doc.text(String(vaccinationEvents), 80, 81);
+        doc.text('Sales:', 20, 88);
+        doc.text(String(saleEvents), 80, 88);
+        
+        // Events list
+        doc.setFontSize(14);
+        doc.text('Events List', 14, 100);
+        
+        let yPos = 110;
+        
+        // Column headers
+        doc.setFontSize(10);
+        doc.text('Date', 20, yPos);
+        doc.text('Type', 60, yPos);
+        doc.text('Title', 100, yPos);
+        yPos += 7;
+        
+        // Add events (limited to avoid overflow)
+        const eventsToShow = monthEvents.slice(0, 20);
+        eventsToShow.forEach(event => {
+          if (yPos > 270) {
+            doc.addPage();
+            yPos = 20;
+            // Add column headers on new page
+            doc.text('Date', 20, yPos);
+            doc.text('Type', 60, yPos);
+            doc.text('Title', 100, yPos);
+            yPos += 7;
+          }
+          
+          doc.text(format(event.date, 'MMM dd, yyyy'), 20, yPos);
+          doc.text(event.type, 60, yPos);
+          doc.text(event.title, 100, yPos);
+          yPos += 7;
+        });
+        
+        // If there are more events than we showed, add a note
+        if (monthEvents.length > eventsToShow.length) {
+          yPos += 7;
+          doc.text(`* ${monthEvents.length - eventsToShow.length} more events not shown`, 20, yPos);
+        }
+        
+        // Save PDF
+        const currentDate = format(new Date(), 'yyyy-MM-dd');
+        doc.save(`calendar_report_${currentDate}.pdf`);
+      }
+      
+      toast.success(`Calendar report generated successfully (${format.toUpperCase()})`);
+    } catch (error) {
+      console.error('Error generating report:', error);
+      toast.error('Failed to generate report');
+    }
+  };
+  
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">Calendar</h1>
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold tracking-tight">Calendar</h1>
+        <ReportButton 
+          onExcelExport={() => handleGenerateReport('excel')} 
+          onPdfExport={() => handleGenerateReport('pdf')} 
+        />
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {/* Calendar */}

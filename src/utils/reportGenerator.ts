@@ -1,4 +1,3 @@
-
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
@@ -438,7 +437,7 @@ export const generateVaccinationReport = (
     doc.autoTable({
       head: [recordsColumns.map(col => col.header)],
       body: recordsData.map(row => {
-        return recordsColumns.map(col => String(row[col.dataKey as keyof typeof row]));
+        return recordsColumns.map(col => String(row[col.dataKey as keyof row]));
       }),
       startY: y,
       styles: { fontSize: 9, cellPadding: 2 },
@@ -461,7 +460,7 @@ export const generateVaccinationReport = (
     doc.autoTable({
       head: [vaccinesColumns.map(col => col.header)],
       body: vaccinesData.map(row => {
-        return vaccinesColumns.map(col => String(row[col.dataKey as keyof typeof row]));
+        return vaccinesColumns.map(col => String(row[col.dataKey as keyof row]));
       }),
       startY: y,
       styles: { fontSize: 9, cellPadding: 2 },
@@ -484,7 +483,7 @@ export const generateVaccinationReport = (
     doc.autoTable({
       head: [upcomingColumns.map(col => col.header)],
       body: upcomingVaccinations.map(row => {
-        return upcomingColumns.map(col => String(row[col.dataKey as keyof typeof row]));
+        return upcomingColumns.map(col => String(row[col.dataKey as keyof row]));
       }),
       startY: y,
       styles: { fontSize: 9, cellPadding: 2 },
@@ -795,7 +794,7 @@ export const generateCustomerReport = (
     doc.autoTable({
       head: [customerColumns.map(col => col.header)],
       body: customerData.map(row => {
-        return customerColumns.map(col => String(row[col.dataKey as keyof typeof row]));
+        return customerColumns.map(col => String(row[col.dataKey as keyof row]));
       }),
       startY: y,
       styles: { fontSize: 8, cellPadding: 2 },
@@ -814,7 +813,7 @@ export const generateCustomerReport = (
     doc.autoTable({
       head: [orderColumns.map(col => col.header)],
       body: ordersData.map(row => {
-        return orderColumns.map(col => String(row[col.dataKey as keyof typeof row]));
+        return orderColumns.map(col => String(row[col.dataKey as keyof row]));
       }),
       startY: y,
       styles: { fontSize: 9, cellPadding: 2 },
