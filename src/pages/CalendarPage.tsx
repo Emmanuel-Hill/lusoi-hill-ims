@@ -32,7 +32,7 @@ import ReportButton from '@/components/ReportButton';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
-import { formatDate } from '@/utils/reportGenerator';
+import { formatDate } from '@/utils/formatUtils';
 
 // Type for the calendar events
 interface Event {
@@ -297,7 +297,7 @@ const CalendarPage = () => {
               onSelect={(newDate) => newDate && setDate(newDate)}
               className="rounded-md border"
               components={{
-                Day: ({ day }) => renderDay(day),
+                Day: ({ date: dayDate }) => renderDay(dayDate),
               }}
             />
           </CardContent>

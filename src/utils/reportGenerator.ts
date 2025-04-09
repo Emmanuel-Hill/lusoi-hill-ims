@@ -625,7 +625,10 @@ export const generateSalesReport = (
     y += 10;
     
     const summaryData = salesData.map(({date, customerName, totalAmount, notes}) => ({
-      date, customerName, totalAmount: `$${totalAmount.toFixed(2)}`, notes
+      date, 
+      customerName, 
+      totalAmount: `$${totalAmount.toFixed(2)}`, 
+      notes
     }));
     
     doc.autoTable({
