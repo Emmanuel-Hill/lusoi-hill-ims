@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import {
@@ -53,6 +52,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
+import { generateCustomerReport } from '@/utils/reportGenerator';
+import ReportButton from '@/components/ReportButton';
 
 const statusColorMap = {
   'Pending': 'bg-yellow-100 text-yellow-800',
@@ -259,9 +260,26 @@ const Customers = () => {
     return customer ? customer.name : 'Unknown Customer';
   };
 
+  // Add report generation handler
+  const handleGenerateReport = (format: 'excel' | 'pdf') => {
+    try {
+      generateCustomerReport(customers, sales, orders, format);
+      toast.success(`Customer report generated successfully (${format.toUpperCase()})`);
+    } catch (error) {
+      console.error('Error generating report:', error);
+      toast.error('Failed to generate report');
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">Customer Management</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold tracking-tight">Customer Management</h1>
+        <ReportButton 
+          onExcelExport={() => handleGenerateReport('excel')} 
+          onPdfExport={() => handleGenerateReport('pdf')} 
+        />
+      </div>
       
       <Tabs defaultValue="customers" className="w-full">
         <TabsList className="grid grid-cols-2 w-full mb-4">

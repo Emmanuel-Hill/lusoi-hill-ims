@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import {
@@ -48,6 +47,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { generateSalesReport } from '@/utils/reportGenerator';
+import ReportButton from '@/components/ReportButton';
 
 const Sales = () => {
   const {
@@ -304,6 +305,17 @@ const Sales = () => {
   const dailySales = getDailySales();
   const monthlySales = getMonthlySales();
 
+  // Add report generation handler
+  const handleGenerateReport = (format: 'excel' | 'pdf') => {
+    try {
+      generateSalesReport(sales, products, customers, format);
+      toast.success(`Sales report generated successfully (${format.toUpperCase()})`);
+    } catch (error) {
+      console.error('Error generating report:', error);
+      toast.error('Failed to generate report');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold tracking-tight">Sales Management</h1>
@@ -332,6 +344,13 @@ const Sales = () => {
             <p className="text-xs text-muted-foreground">Total: ${monthlySales.total.toFixed(2)}</p>
           </CardContent>
         </Card>
+      </div>
+      
+      <div className="flex justify-between items-center mb-4">
+        <ReportButton 
+          onExcelExport={() => handleGenerateReport('excel')} 
+          onPdfExport={() => handleGenerateReport('pdf')} 
+        />
       </div>
       
       <Tabs defaultValue="products" className="w-full">

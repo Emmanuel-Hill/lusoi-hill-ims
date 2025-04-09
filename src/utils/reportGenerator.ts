@@ -1,3 +1,4 @@
+
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
@@ -178,7 +179,7 @@ export const generateFeedManagementReport = (
   batches: Batch[],
   format: 'excel' | 'pdf'
 ): void => {
-  // Generate consumption report
+  // Process consumption report
   const consumptionData = feedConsumption.map(feed => {
     const feedType = feedTypes.find(f => f.id === feed.feedTypeId);
     const batch = batches.find(b => b.id === feed.batchId);
