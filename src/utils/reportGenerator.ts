@@ -1,8 +1,10 @@
+
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { Batch, EggCollection, FeedConsumption, FeedInventory, FeedType, VaccinationRecord, Vaccine, Sale, Product, Customer, Order } from '@/types';
 import { format } from 'date-fns';
+import { formatDate } from './formatUtils';
 
 // Define types for the autotable plugin
 declare module 'jspdf' {
@@ -10,15 +12,6 @@ declare module 'jspdf' {
     autoTable: (options: any) => jsPDF;
   }
 }
-
-// Helper function to format date
-const formatDate = (dateString: string): string => {
-  try {
-    return format(new Date(dateString), 'MMM dd, yyyy');
-  } catch (e) {
-    return dateString;
-  }
-};
 
 // Generic function to export data to Excel
 export const exportToExcel = <T extends Record<string, any>>(
@@ -437,7 +430,7 @@ export const generateVaccinationReport = (
     doc.autoTable({
       head: [recordsColumns.map(col => col.header)],
       body: recordsData.map(row => {
-        return recordsColumns.map(col => String(row[col.dataKey as keyof row]));
+        return recordsColumns.map(col => String(row[col.dataKey as keyof typeof row]));
       }),
       startY: y,
       styles: { fontSize: 9, cellPadding: 2 },
@@ -460,7 +453,7 @@ export const generateVaccinationReport = (
     doc.autoTable({
       head: [vaccinesColumns.map(col => col.header)],
       body: vaccinesData.map(row => {
-        return vaccinesColumns.map(col => String(row[col.dataKey as keyof row]));
+        return vaccinesColumns.map(col => String(row[col.dataKey as keyof typeof row]));
       }),
       startY: y,
       styles: { fontSize: 9, cellPadding: 2 },
@@ -483,7 +476,7 @@ export const generateVaccinationReport = (
     doc.autoTable({
       head: [upcomingColumns.map(col => col.header)],
       body: upcomingVaccinations.map(row => {
-        return upcomingColumns.map(col => String(row[col.dataKey as keyof row]));
+        return upcomingColumns.map(col => String(row[col.dataKey as keyof typeof row]));
       }),
       startY: y,
       styles: { fontSize: 9, cellPadding: 2 },
@@ -794,7 +787,7 @@ export const generateCustomerReport = (
     doc.autoTable({
       head: [customerColumns.map(col => col.header)],
       body: customerData.map(row => {
-        return customerColumns.map(col => String(row[col.dataKey as keyof row]));
+        return customerColumns.map(col => String(row[col.dataKey as keyof typeof row]));
       }),
       startY: y,
       styles: { fontSize: 8, cellPadding: 2 },
@@ -813,7 +806,7 @@ export const generateCustomerReport = (
     doc.autoTable({
       head: [orderColumns.map(col => col.header)],
       body: ordersData.map(row => {
-        return orderColumns.map(col => String(row[col.dataKey as keyof row]));
+        return orderColumns.map(col => String(row[col.dataKey as keyof typeof row]));
       }),
       startY: y,
       styles: { fontSize: 9, cellPadding: 2 },

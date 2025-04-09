@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import {
@@ -8,14 +9,6 @@ import {
   CardTitle,
   CardFooter,
 } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -38,17 +31,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import {
-  Plus,
-  Trash2,
-  Edit,
-  ShoppingCart,
-  Tag,
-} from 'lucide-react';
+import { Plus, ShoppingCart } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { generateSalesReport } from '@/utils/reportGenerator';
 import ReportButton from '@/components/ReportButton';
+import ProductsList from '@/components/sales/ProductsList';
+import SalesList from '@/components/sales/SalesList';
+import SaleItemsList from '@/components/sales/SaleItemsList';
 
 const Sales = () => {
   const {
@@ -268,17 +258,6 @@ const Sales = () => {
     toast.success('Sale recorded successfully');
   };
 
-  const getProductName = (productId: string) => {
-    const product = products.find(p => p.id === productId);
-    return product ? product.name : 'Unknown Product';
-  };
-
-  const getCustomerName = (customerId?: string) => {
-    if (!customerId) return 'Walk-in Customer';
-    const customer = customers.find(c => c.id === customerId);
-    return customer ? customer.name : 'Unknown Customer';
-  };
-
   // Calculate daily and monthly sales
   const getDailySales = () => {
     const today = new Date().toISOString().split('T')[0];
@@ -451,51 +430,10 @@ const Sales = () => {
               <CardDescription>Manage your product catalog and prices</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Condition</TableHead>
-                    <TableHead>Current Price</TableHead>
-                    <TableHead>Last Updated</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {products.length > 0 ? (
-                    products.map((product) => (
-                      <TableRow key={product.id}>
-                        <TableCell className="font-medium">{product.name}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{product.type}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          {product.condition === 'NA' ? '-' : product.condition}
-                        </TableCell>
-                        <TableCell>${product.currentPrice.toFixed(2)}</TableCell>
-                        <TableCell>{product.priceUpdatedAt}</TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditPriceClick(product)}
-                          >
-                            <Tag className="h-4 w-4 mr-1" />
-                            Update Price
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center py-4 text-muted-foreground">
-                        No products added yet. Start by adding a product.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+              <ProductsList 
+                products={products} 
+                onEditPrice={handleEditPriceClick}
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -588,36 +526,11 @@ const Sales = () => {
                     {saleForm.products.length > 0 ? (
                       <div>
                         <h4 className="font-medium mb-2">Sale Items</h4>
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Product</TableHead>
-                              <TableHead>Quantity</TableHead>
-                              <TableHead>Price</TableHead>
-                              <TableHead>Total</TableHead>
-                              <TableHead></TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {saleForm.products.map((item) => (
-                              <TableRow key={item.productId}>
-                                <TableCell>{getProductName(item.productId)}</TableCell>
-                                <TableCell>{item.quantity}</TableCell>
-                                <TableCell>${item.pricePerUnit.toFixed(2)}</TableCell>
-                                <TableCell>${(item.quantity * item.pricePerUnit).toFixed(2)}</TableCell>
-                                <TableCell>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => removeProductFromSale(item.productId)}
-                                  >
-                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                  </Button>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
+                        <SaleItemsList
+                          items={saleForm.products}
+                          products={products}
+                          onRemove={removeProductFromSale}
+                        />
                         <div className="flex justify-end mt-2">
                           <Badge className="text-lg py-1 px-3">
                             Total: ${saleForm.totalAmount.toFixed(2)}
@@ -662,44 +575,11 @@ const Sales = () => {
               <CardDescription>All recorded sales transactions</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Items</TableHead>
-                    <TableHead>Total Amount</TableHead>
-                    <TableHead>Notes</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sales.length > 0 ? (
-                    sales.map((sale) => (
-                      <TableRow key={sale.id}>
-                        <TableCell>{sale.date}</TableCell>
-                        <TableCell>{getCustomerName(sale.customerId)}</TableCell>
-                        <TableCell>
-                          <div className="flex flex-col gap-1 max-h-20 overflow-y-auto">
-                            {sale.products.map((item) => (
-                              <div key={item.productId} className="text-xs">
-                                {getProductName(item.productId)} x {item.quantity}
-                              </div>
-                            ))}
-                          </div>
-                        </TableCell>
-                        <TableCell>${sale.totalAmount.toFixed(2)}</TableCell>
-                        <TableCell className="max-w-[200px] truncate">{sale.notes || '-'}</TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">
-                        No sales recorded yet. Start by recording a sale.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+              <SalesList 
+                sales={sales} 
+                products={products} 
+                customers={customers} 
+              />
             </CardContent>
           </Card>
         </TabsContent>

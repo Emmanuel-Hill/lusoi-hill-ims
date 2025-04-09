@@ -1,61 +1,54 @@
+
 import React, { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
-import { Plus, Package } from 'lucide-react';
 import FeedTypeForm from '@/components/feed/FeedTypeForm';
 import FeedConsumptionForm from '@/components/feed/FeedConsumptionForm';
 import FeedInventoryForm from '@/components/feed/FeedInventoryForm';
-import { generateFeedManagementReport } from '@/utils/reportGenerator';
+import FeedTypeList from '@/components/feed/FeedTypeList';
+import FeedConsumptionList from '@/components/feed/FeedConsumptionList';
+import FeedInventoryList from '@/components/feed/FeedInventoryList';
 import ReportButton from '@/components/ReportButton';
+import { generateFeedManagementReport } from '@/utils/reportGenerator';
 
 const FeedManagement = () => {
-  const [isTypesDialogOpen, setIsTypesDialogOpen] = useState(false);
-  const [isConsumptionDialogOpen, setIsConsumptionDialogOpen] = useState(false);
-  const [isInventoryDialogOpen, setIsInventoryDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("types");
-
   const {
     feedTypes,
     addFeedType,
+    updateFeedType,
+    deleteFeedType,
     feedConsumption,
-    addFeedInventory,
+    addFeedConsumption: addConsumption,
     feedInventory,
-    batches,
+    addFeedInventory,
+    batches
   } = useAppContext();
 
-  // Feed Types form state
+  // Feed Type Dialog State
+  const [isTypeDialogOpen, setIsTypeDialogOpen] = useState(false);
+  const [isTypeEditMode, setIsTypeEditMode] = useState(false);
+  const [selectedFeedType, setSelectedFeedType] = useState<any>(null);
+  
   const [feedTypeForm, setFeedTypeForm] = useState({
     name: '',
     description: '',
-    birdType: 'Layer' as 'Layer' | 'Broiler' | 'Chick' | 'All',
+    birdType: 'Layers' as 'Layers' | 'Growers' | 'Other',
   });
 
-  // Feed Consumption form state
-  const [feedConsumptionForm, setFeedConsumptionForm] = useState({
+  // Feed Consumption Dialog State
+  const [isConsumptionDialogOpen, setIsConsumptionDialogOpen] = useState(false);
+  const [consumptionForm, setConsumptionForm] = useState({
     feedTypeId: '',
     batchId: '',
     date: new Date().toISOString().split('T')[0],
@@ -64,15 +57,17 @@ const FeedManagement = () => {
     notes: '',
   });
 
-  // Feed Inventory form state
-  const [feedInventoryForm, setFeedInventoryForm] = useState({
+  // Feed Inventory Dialog State
+  const [isInventoryDialogOpen, setIsInventoryDialogOpen] = useState(false);
+  const [inventoryForm, setInventoryForm] = useState({
     feedTypeId: '',
     date: new Date().toISOString().split('T')[0],
     quantityKg: 0,
     isProduced: false,
     notes: '',
   });
-
+  
+  // Feed Type handlers
   const handleFeedTypeChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFeedTypeForm({
@@ -80,76 +75,102 @@ const FeedManagement = () => {
       [name]: value,
     });
   };
-
-  const handleBirdTypeChange = (value: string) => {
+  
+  const handleBirdTypeChange = (value: 'Layers' | 'Growers' | 'Other') => {
     setFeedTypeForm({
       ...feedTypeForm,
-      birdType: value as 'Layer' | 'Broiler' | 'Chick' | 'All',
+      birdType: value,
     });
   };
-
-  const handleFeedConsumptionChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setFeedConsumptionForm({
-      ...feedConsumptionForm,
-      [name]: name === 'quantityKg' ? parseFloat(value) : value,
-    });
-  };
-
-  const handleFeedInventoryChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    const { name, value, type, checked } = e.target as HTMLInputElement;
-    setFeedInventoryForm({
-      ...feedInventoryForm,
-      [name]: type === 'checkbox' ? checked : name === 'quantityKg' ? parseFloat(value) : value,
-    });
-  };
-
-  const handleAddFeedType = () => {
-    if (!feedTypeForm.name || !feedTypeForm.birdType) {
-      toast.error('Please fill in all required fields');
+  
+  const handleFeedTypeSubmit = () => {
+    if (!feedTypeForm.name) {
+      toast.error('Please enter a feed type name');
       return;
     }
-
-    addFeedType({
-      name: feedTypeForm.name,
-      description: feedTypeForm.description,
-      birdType: feedTypeForm.birdType,
+    
+    if (isTypeEditMode && selectedFeedType) {
+      updateFeedType(selectedFeedType.id, feedTypeForm);
+      toast.success('Feed type updated successfully');
+    } else {
+      addFeedType(feedTypeForm);
+      toast.success('Feed type added successfully');
+    }
+    
+    resetFeedTypeForm();
+    setIsTypeDialogOpen(false);
+  };
+  
+  const handleEditFeedType = (feedType: any) => {
+    setSelectedFeedType(feedType);
+    setFeedTypeForm({
+      name: feedType.name,
+      description: feedType.description || '',
+      birdType: feedType.birdType,
     });
-
+    setIsTypeEditMode(true);
+    setIsTypeDialogOpen(true);
+  };
+  
+  const handleDeleteFeedType = (id: string) => {
+    deleteFeedType(id);
+    toast.success('Feed type deleted successfully');
+  };
+  
+  const resetFeedTypeForm = () => {
     setFeedTypeForm({
       name: '',
       description: '',
-      birdType: 'Layer',
+      birdType: 'Layers',
     });
-
-    setIsTypesDialogOpen(false);
-    toast.success('Feed type added successfully');
+    setSelectedFeedType(null);
+    setIsTypeEditMode(false);
   };
 
-  const handleAddFeedConsumption = () => {
-    if (
-      !feedConsumptionForm.feedTypeId ||
-      !feedConsumptionForm.batchId ||
-      feedConsumptionForm.quantityKg <= 0
-    ) {
-      toast.error('Please fill in all required fields');
+  // Feed Consumption handlers
+  const handleConsumptionChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setConsumptionForm({
+      ...consumptionForm,
+      [name]: name === 'quantityKg' ? Number(value) : value,
+    });
+  };
+  
+  const handleFeedTypeSelect = (value: string) => {
+    setConsumptionForm({
+      ...consumptionForm,
+      feedTypeId: value,
+    });
+  };
+  
+  const handleBatchSelect = (value: string) => {
+    setConsumptionForm({
+      ...consumptionForm,
+      batchId: value,
+    });
+  };
+  
+  const handleTimeOfDayChange = (value: 'Morning' | 'Afternoon' | 'Evening') => {
+    setConsumptionForm({
+      ...consumptionForm,
+      timeOfDay: value,
+    });
+  };
+  
+  const handleConsumptionSubmit = () => {
+    if (!consumptionForm.feedTypeId || !consumptionForm.batchId || consumptionForm.quantityKg <= 0) {
+      toast.error('Please fill all required fields with valid values');
       return;
     }
-
-    addFeedConsumption({
-      feedTypeId: feedConsumptionForm.feedTypeId,
-      batchId: feedConsumptionForm.batchId,
-      date: feedConsumptionForm.date,
-      quantityKg: feedConsumptionForm.quantityKg,
-      timeOfDay: feedConsumptionForm.timeOfDay,
-      notes: feedConsumptionForm.notes,
-    });
-
-    setFeedConsumptionForm({
+    
+    addConsumption(consumptionForm);
+    resetConsumptionForm();
+    setIsConsumptionDialogOpen(false);
+    toast.success('Feed consumption recorded successfully');
+  };
+  
+  const resetConsumptionForm = () => {
+    setConsumptionForm({
       feedTypeId: '',
       batchId: '',
       date: new Date().toISOString().split('T')[0],
@@ -157,52 +178,59 @@ const FeedManagement = () => {
       timeOfDay: 'Morning',
       notes: '',
     });
-
-    setIsConsumptionDialogOpen(false);
-    toast.success('Feed consumption recorded successfully');
   };
 
-  const handleAddFeedInventory = () => {
-    if (!feedInventoryForm.feedTypeId || feedInventoryForm.quantityKg <= 0) {
-      toast.error('Please fill in all required fields');
+  // Feed Inventory handlers
+  const handleInventoryChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target as HTMLInputElement;
+    setInventoryForm({
+      ...inventoryForm,
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : 
+              name === 'quantityKg' ? Number(value) : value,
+    });
+  };
+  
+  const handleInventoryFeedTypeSelect = (value: string) => {
+    setInventoryForm({
+      ...inventoryForm,
+      feedTypeId: value,
+    });
+  };
+  
+  const handleIsProducedChange = (value: boolean) => {
+    setInventoryForm({
+      ...inventoryForm,
+      isProduced: value,
+    });
+  };
+  
+  const handleInventorySubmit = () => {
+    if (!inventoryForm.feedTypeId || inventoryForm.quantityKg <= 0) {
+      toast.error('Please fill all required fields with valid values');
       return;
     }
-
-    addFeedInventory({
-      feedTypeId: feedInventoryForm.feedTypeId,
-      date: feedInventoryForm.date,
-      quantityKg: feedInventoryForm.quantityKg,
-      isProduced: feedInventoryForm.isProduced,
-      notes: feedInventoryForm.notes,
-    });
-
-    setFeedInventoryForm({
+    
+    addFeedInventory(inventoryForm);
+    resetInventoryForm();
+    setIsInventoryDialogOpen(false);
+    toast.success('Feed inventory updated successfully');
+  };
+  
+  const resetInventoryForm = () => {
+    setInventoryForm({
       feedTypeId: '',
       date: new Date().toISOString().split('T')[0],
       quantityKg: 0,
       isProduced: false,
       notes: '',
     });
-
-    setIsInventoryDialogOpen(false);
-    toast.success('Feed inventory updated successfully');
   };
 
-  const getBatchName = (batchId: string) => {
-    const batch = batches.find((b) => b.id === batchId);
-    return batch ? batch.name : 'Unknown batch';
-  };
-
-  const getFeedTypeName = (feedTypeId: string) => {
-    const feedType = feedTypes.find((ft) => ft.id === feedTypeId);
-    return feedType ? feedType.name : 'Unknown feed';
-  };
-
-  // Add report generation handler
+  // Generate report handler
   const handleGenerateReport = (format: 'excel' | 'pdf') => {
     try {
       generateFeedManagementReport(feedConsumption, feedInventory, feedTypes, batches, format);
-      toast.success(`Feed management report generated successfully (${format.toUpperCase()})`);
+      toast.success(`Feed report generated successfully (${format.toUpperCase()})`);
     } catch (error) {
       console.error('Error generating report:', error);
       toast.error('Failed to generate report');
@@ -231,204 +259,140 @@ const FeedManagement = () => {
         {/* Feed Types Tab */}
         <TabsContent value="types" className="space-y-4">
           <div className="flex justify-end">
-            <Dialog open={isTypesDialogOpen} onOpenChange={setIsTypesDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Feed Type
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Add New Feed Type</DialogTitle>
-                  <DialogDescription>
-                    Add a new feed type to the catalog.
-                  </DialogDescription>
-                </DialogHeader>
-                <FeedTypeForm
-                  formData={feedTypeForm}
-                  onChange={handleFeedTypeChange}
-                  onBirdTypeChange={handleBirdTypeChange}
-                  onSubmit={handleAddFeedType}
-                  onCancel={() => setIsTypesDialogOpen(false)}
-                />
-              </DialogContent>
-            </Dialog>
+            <Button onClick={() => {
+              resetFeedTypeForm();
+              setIsTypeDialogOpen(true);
+            }}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Feed Type
+            </Button>
           </div>
           
           <Card>
             <CardHeader>
               <CardTitle>Feed Types</CardTitle>
-              <CardDescription>Manage your feed types catalog</CardDescription>
+              <CardDescription>
+                Manage the different types of feed you use on your farm
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Bird Type</TableHead>
-                    <TableHead>Description</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {feedTypes.length > 0 ? (
-                    feedTypes.map((type) => (
-                      <TableRow key={type.id}>
-                        <TableCell className="font-medium">{type.name}</TableCell>
-                        <TableCell>{type.birdType}</TableCell>
-                        <TableCell>{type.description}</TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={3} className="text-center py-4 text-muted-foreground">
-                        No feed types added yet. Start by adding a feed type.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+              <FeedTypeList 
+                feedTypes={feedTypes}
+                onEdit={handleEditFeedType}
+                onDelete={handleDeleteFeedType}
+              />
             </CardContent>
           </Card>
+          
+          <Dialog open={isTypeDialogOpen} onOpenChange={setIsTypeDialogOpen}>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>
+                  {isTypeEditMode ? 'Edit Feed Type' : 'Add New Feed Type'}
+                </DialogTitle>
+              </DialogHeader>
+              <FeedTypeForm 
+                formData={feedTypeForm}
+                onChange={handleFeedTypeChange}
+                onBirdTypeChange={handleBirdTypeChange}
+                onSubmit={handleFeedTypeSubmit}
+                onCancel={() => setIsTypeDialogOpen(false)}
+              />
+            </DialogContent>
+          </Dialog>
         </TabsContent>
         
         {/* Feed Consumption Tab */}
         <TabsContent value="consumption" className="space-y-4">
           <div className="flex justify-end">
-            <Dialog open={isConsumptionDialogOpen} onOpenChange={setIsConsumptionDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Record Consumption
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Record Feed Consumption</DialogTitle>
-                  <DialogDescription>
-                    Record feed consumption for a batch.
-                  </DialogDescription>
-                </DialogHeader>
-                <FeedConsumptionForm
-                  formData={feedConsumptionForm}
-                  onChange={handleFeedConsumptionChange}
-                  onSubmit={handleAddFeedConsumption}
-                  onCancel={() => setIsConsumptionDialogOpen(false)}
-                  feedTypes={feedTypes}
-                  batches={batches}
-                />
-              </DialogContent>
-            </Dialog>
+            <Button onClick={() => {
+              resetConsumptionForm();
+              setIsConsumptionDialogOpen(true);
+            }}>
+              <Plus className="mr-2 h-4 w-4" />
+              Record Feed Consumption
+            </Button>
           </div>
           
           <Card>
             <CardHeader>
-              <CardTitle>Feed Consumption</CardTitle>
-              <CardDescription>Record and view feed consumption history</CardDescription>
+              <CardTitle>Feed Consumption Records</CardTitle>
+              <CardDescription>
+                Track how much feed is being consumed by each batch
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Batch</TableHead>
-                    <TableHead>Feed Type</TableHead>
-                    <TableHead>Quantity (kg)</TableHead>
-                    <TableHead>Time of Day</TableHead>
-                    <TableHead>Notes</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {feedConsumption.length > 0 ? (
-                    feedConsumption.map((consumption) => (
-                      <TableRow key={consumption.id}>
-                        <TableCell>{consumption.date}</TableCell>
-                        <TableCell>{getBatchName(consumption.batchId)}</TableCell>
-                        <TableCell>{getFeedTypeName(consumption.feedTypeId)}</TableCell>
-                        <TableCell>{consumption.quantityKg}</TableCell>
-                        <TableCell>{consumption.timeOfDay}</TableCell>
-                        <TableCell>{consumption.notes}</TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center py-4 text-muted-foreground">
-                        No feed consumption recorded yet. Start by recording feed consumption.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+              <FeedConsumptionList 
+                feedConsumption={feedConsumption}
+                feedTypes={feedTypes}
+                batches={batches}
+              />
             </CardContent>
           </Card>
+          
+          <Dialog open={isConsumptionDialogOpen} onOpenChange={setIsConsumptionDialogOpen}>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Record Feed Consumption</DialogTitle>
+              </DialogHeader>
+              <FeedConsumptionForm 
+                formData={consumptionForm}
+                onChange={handleConsumptionChange}
+                onSubmit={handleConsumptionSubmit}
+                onCancel={() => setIsConsumptionDialogOpen(false)}
+                feedTypes={feedTypes}
+                batches={batches}
+                onFeedTypeChange={handleFeedTypeSelect}
+                onBatchChange={handleBatchSelect}
+                onTimeOfDayChange={handleTimeOfDayChange}
+              />
+            </DialogContent>
+          </Dialog>
         </TabsContent>
         
         {/* Feed Inventory Tab */}
         <TabsContent value="inventory" className="space-y-4">
           <div className="flex justify-end">
-            <Dialog open={isInventoryDialogOpen} onOpenChange={setIsInventoryDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Update Inventory
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Update Feed Inventory</DialogTitle>
-                  <DialogDescription>
-                    Add or subtract feed from the inventory.
-                  </DialogDescription>
-                </DialogHeader>
-                <FeedInventoryForm
-                  formData={feedInventoryForm}
-                  onChange={handleFeedInventoryChange}
-                  onSubmit={handleAddFeedInventory}
-                  onCancel={() => setIsInventoryDialogOpen(false)}
-                  feedTypes={feedTypes}
-                />
-              </DialogContent>
-            </Dialog>
+            <Button onClick={() => {
+              resetInventoryForm();
+              setIsInventoryDialogOpen(true);
+            }}>
+              <Plus className="mr-2 h-4 w-4" />
+              Update Feed Inventory
+            </Button>
           </div>
           
           <Card>
             <CardHeader>
               <CardTitle>Feed Inventory</CardTitle>
-              <CardDescription>View and manage your feed inventory</CardDescription>
+              <CardDescription>
+                Track your feed stock levels
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Feed Type</TableHead>
-                    <TableHead>Quantity (kg)</TableHead>
-                    <TableHead>Source</TableHead>
-                    <TableHead>Notes</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {feedInventory.length > 0 ? (
-                    feedInventory.map((inventory) => (
-                      <TableRow key={inventory.id}>
-                        <TableCell>{inventory.date}</TableCell>
-                        <TableCell>{getFeedTypeName(inventory.feedTypeId)}</TableCell>
-                        <TableCell>{inventory.quantityKg}</TableCell>
-                        <TableCell>{inventory.isProduced ? 'Farm-produced' : 'Purchased'}</TableCell>
-                        <TableCell>{inventory.notes}</TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">
-                        No feed inventory recorded yet. Start by updating feed inventory.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+              <FeedInventoryList 
+                feedInventory={feedInventory}
+                feedTypes={feedTypes}
+              />
             </CardContent>
           </Card>
+          
+          <Dialog open={isInventoryDialogOpen} onOpenChange={setIsInventoryDialogOpen}>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Update Feed Inventory</DialogTitle>
+              </DialogHeader>
+              <FeedInventoryForm 
+                formData={inventoryForm}
+                onChange={handleInventoryChange}
+                onSubmit={handleInventorySubmit}
+                onCancel={() => setIsInventoryDialogOpen(false)}
+                feedTypes={feedTypes}
+                onFeedTypeChange={handleInventoryFeedTypeSelect}
+                onIsProducedChange={handleIsProducedChange}
+              />
+            </DialogContent>
+          </Dialog>
         </TabsContent>
       </Tabs>
     </div>

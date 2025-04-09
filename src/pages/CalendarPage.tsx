@@ -1,20 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import {
-  add,
-  eachDayOfInterval,
-  endOfMonth,
-  format,
-  getDay,
-  isEqual,
-  isSameMonth,
-  isToday,
-  parse,
-  parseISO,
-  startOfToday,
-  startOfWeek,
-  endOfWeek,
-  startOfMonth,
-} from 'date-fns';
+
+import React, { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -22,438 +7,355 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { useAppContext } from '@/context/AppContext';
-import { cn } from '@/lib/utils';
+import { Calendar } from '@/components/ui/calendar';
 import {
-  ChevronLeft,
-  ChevronRight,
-  Calendar as CalendarIcon,
-  Circle,
-  Egg,
-  Package,
-  Syringe,
-} from 'lucide-react';
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useAppContext } from '@/context/AppContext';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
 import ReportButton from '@/components/ReportButton';
+import * as XLSX from 'xlsx';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
+import { formatDate } from '@/utils/reportGenerator';
 
-type CalendarEvent = {
-  id: string;
+// Type for the calendar events
+interface Event {
   date: Date;
+  type: 'egg-collection' | 'feed' | 'vaccination' | 'sale';
   title: string;
-  type: 'egg' | 'feed' | 'vaccination' | 'sale';
-  description?: string;
-};
+  detail: string;
+}
 
-function classNames(...classes: (string | boolean)[]) {
-  return classes.filter(Boolean).join(' ');
+// Type for the autotable plugin
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: (options: any) => jsPDF;
+  }
 }
 
 const CalendarPage = () => {
-  const today = startOfToday();
-  const [selectedDay, setSelectedDay] = useState(today);
-  const [currentMonth, setCurrentMonth] = useState(format(today, 'MMM-yyyy'));
-  const firstDayOfMonth = parse(currentMonth, 'MMM-yyyy', new Date());
-  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
-  
-  const {
-    eggCollections,
-    feedConsumption,
-    vaccinationRecords,
-    sales,
-    batches
-  } = useAppContext();
-  
-  useEffect(() => {
-    // Create calendar events from different data sources
-    const events: CalendarEvent[] = [];
-    
-    // Egg collection events
+  const { eggCollections, feedConsumption, vaccinationRecords, sales, batches, feedTypes, vaccines } = useAppContext();
+  const [date, setDate] = useState<Date>(new Date());
+  const [view, setView] = useState<'month' | 'list'>('month');
+  const [eventFilter, setEventFilter] = useState<string>('all');
+
+  // Generate calendar events
+  const generateEvents = (): Event[] => {
+    const events: Event[] = [];
+
+    // Add egg collections to events
     eggCollections.forEach(collection => {
-      const date = parseISO(collection.date);
-      const batch = batches.find(b => b.id === collection.batchId);
       events.push({
-        id: collection.id,
-        date,
+        date: new Date(collection.date),
+        type: 'egg-collection',
         title: 'Egg Collection',
-        description: `${collection.wholeCount + collection.brokenCount} eggs collected from ${batch?.name || 'Unknown batch'}`,
-        type: 'egg'
+        detail: `Collected ${collection.wholeCount + collection.brokenCount} eggs`
       });
     });
-    
-    // Feed consumption events
+
+    // Add feed consumption to events
     feedConsumption.forEach(feed => {
-      const date = parseISO(feed.date);
-      const batch = batches.find(b => b.id === feed.batchId);
+      const feedType = feedTypes.find(f => f.id === feed.feedTypeId);
       events.push({
-        id: feed.id,
-        date,
-        title: 'Feed Distribution',
-        description: `${feed.quantityKg}kg of feed given to ${batch?.name || 'Unknown batch'} (${feed.timeOfDay})`,
-        type: 'feed'
+        date: new Date(feed.date),
+        type: 'feed',
+        title: 'Feed',
+        detail: `${feed.quantityKg}kg of ${feedType?.name || 'feed'}`
       });
     });
-    
-    // Vaccination events
+
+    // Add vaccinations to events
     vaccinationRecords.forEach(record => {
-      const date = parseISO(record.date);
-      const batch = batches.find(b => b.id === record.batchId);
+      const vaccine = vaccines.find(v => v.id === record.vaccineId);
       events.push({
-        id: record.id,
-        date,
+        date: new Date(record.date),
+        type: 'vaccination',
         title: 'Vaccination',
-        description: `Vaccinated ${batch?.name || 'Unknown batch'}`,
-        type: 'vaccination'
+        detail: `${vaccine?.name || 'Vaccine'} administered`
       });
     });
-    
-    // Sales events
+
+    // Add sales to events
     sales.forEach(sale => {
-      const date = parseISO(sale.date);
       events.push({
-        id: sale.id,
-        date,
+        date: new Date(sale.date),
+        type: 'sale',
         title: 'Sale',
-        description: `$${sale.totalAmount.toFixed(2)} sale`,
-        type: 'sale'
+        detail: `$${sale.totalAmount.toFixed(2)} sale`
       });
     });
-    
-    setCalendarEvents(events);
-  }, [eggCollections, feedConsumption, vaccinationRecords, sales, batches]);
-  
-  const days = eachDayOfInterval({
-    start: startOfWeek(startOfMonth(firstDayOfMonth)),
-    end: endOfWeek(endOfMonth(firstDayOfMonth))
+
+    return events;
+  };
+
+  const events = generateEvents();
+
+  // Filter events by the selected day and type
+  const filteredEvents = events.filter(event => {
+    const sameDay = isSameDay(event.date, date);
+    return sameDay && (eventFilter === 'all' || event.type === eventFilter);
   });
-  
-  const previousMonth = () => {
-    const firstDayOfPreviousMonth = add(firstDayOfMonth, { months: -1 });
-    setCurrentMonth(format(firstDayOfPreviousMonth, 'MMM-yyyy'));
+
+  // Get events for a specific day (for the calendar display)
+  const getEventsForDay = (day: Date) => {
+    return events.filter(event => isSameDay(event.date, day));
   };
-  
-  const nextMonth = () => {
-    const firstDayOfNextMonth = add(firstDayOfMonth, { months: 1 });
-    setCurrentMonth(format(firstDayOfNextMonth, 'MMM-yyyy'));
+
+  // Calendar day render function
+  const renderDay = (day: Date) => {
+    const dayEvents = getEventsForDay(day);
+    const hasEggCollection = dayEvents.some(event => event.type === 'egg-collection');
+    const hasFeed = dayEvents.some(event => event.type === 'feed');
+    const hasVaccination = dayEvents.some(event => event.type === 'vaccination');
+    const hasSale = dayEvents.some(event => event.type === 'sale');
+
+    return (
+      <div className="relative w-full h-full">
+        <time dateTime={format(day, 'yyyy-MM-dd')} className="text-sm">
+          {format(day, 'd')}
+        </time>
+        <div className="flex flex-wrap gap-0.5 mt-1">
+          {hasEggCollection && <div className="w-2 h-2 rounded-full bg-green-500" />}
+          {hasFeed && <div className="w-2 h-2 rounded-full bg-orange-500" />}
+          {hasVaccination && <div className="w-2 h-2 rounded-full bg-blue-500" />}
+          {hasSale && <div className="w-2 h-2 rounded-full bg-purple-500" />}
+        </div>
+      </div>
+    );
   };
-  
-  const eventsForSelectedDay = calendarEvents.filter(event => 
-    isEqual(event.date, selectedDay)
-  );
-  
-  // Add calendar report generation handler
-  const handleGenerateReport = (format: 'excel' | 'pdf') => {
+
+  // Generate monthly report data
+  const generateMonthlyReportData = () => {
+    // Get all days in the current month
+    const monthStart = startOfMonth(date);
+    const monthEnd = endOfMonth(date);
+    const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
+    
+    // Prepare report data
+    return monthDays.map(day => {
+      const dayEvents = getEventsForDay(day);
+      
+      const eggCollectionEvents = dayEvents.filter(event => event.type === 'egg-collection');
+      const feedEvents = dayEvents.filter(event => event.type === 'feed');
+      const vaccinationEvents = dayEvents.filter(event => event.type === 'vaccination');
+      const saleEvents = dayEvents.filter(event => event.type === 'sale');
+      
+      return {
+        date: format(day, 'yyyy-MM-dd'),
+        eggCollections: eggCollectionEvents.length,
+        eggDetails: eggCollectionEvents.map(e => e.detail).join('; '),
+        feedEvents: feedEvents.length,
+        feedDetails: feedEvents.map(e => e.detail).join('; '),
+        vaccinationEvents: vaccinationEvents.length,
+        vaccinationDetails: vaccinationEvents.map(e => e.detail).join('; '),
+        salesEvents: saleEvents.length,
+        salesDetails: saleEvents.map(e => e.detail).join('; '),
+      };
+    }).filter(day => 
+      day.eggCollections > 0 || 
+      day.feedEvents > 0 || 
+      day.vaccinationEvents > 0 || 
+      day.salesEvents > 0
+    );
+  };
+
+  // Export to Excel
+  const exportToExcel = () => {
     try {
-      // Create a report specifically for calendar events in the current month
-      const firstDay = startOfMonth(firstDayOfMonth);
-      const lastDay = endOfMonth(firstDayOfMonth);
+      const data = generateMonthlyReportData();
+      const worksheet = XLSX.utils.json_to_sheet(data);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Monthly Calendar');
       
-      // Filter events for current month
-      const monthEvents = calendarEvents.filter(event => {
-        const eventDate = event.date;
-        return eventDate >= firstDay && eventDate <= lastDay;
-      });
+      // Generate file name with current month
+      const fileName = `calendar_report_${format(date, 'yyyy-MM')}.xlsx`;
       
-      // Get events by type
-      const eggEvents = monthEvents.filter(event => event.type === 'egg').length;
-      const feedEvents = monthEvents.filter(event => event.type === 'feed').length;
-      const vaccinationEvents = monthEvents.filter(event => event.type === 'vaccination').length;
-      const saleEvents = monthEvents.filter(event => event.type === 'sale').length;
-      
-      // Create summary report data
-      const reportData = [
-        {
-          month: format(firstDayOfMonth, 'MMMM yyyy'),
-          totalEvents: monthEvents.length,
-          eggCollections: eggEvents,
-          feedDistributions: feedEvents,
-          vaccinations: vaccinationEvents,
-          sales: saleEvents
-        }
-      ];
-      
-      // Use XLSX to export to Excel
-      if (format === 'excel') {
-        const XLSX = require('xlsx');
-        const worksheet = XLSX.utils.json_to_sheet(reportData);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Calendar Summary');
-        
-        // Add event details sheet
-        const eventsData = monthEvents.map(event => ({
-          date: format(event.date, 'yyyy-MM-dd'),
-          title: event.title,
-          type: event.type,
-          description: event.description || ''
-        }));
-        const eventsWorksheet = XLSX.utils.json_to_sheet(eventsData);
-        XLSX.utils.book_append_sheet(workbook, eventsWorksheet, 'Events');
-        
-        // Generate filename and save
-        const currentDate = format(new Date(), 'yyyy-MM-dd');
-        XLSX.writeFile(workbook, `calendar_report_${currentDate}.xlsx`);
-      } else {
-        // Use jsPDF for PDF export
-        const jsPDF = require('jspdf');
-        const doc = new jsPDF();
-        
-        // Add title
-        doc.setFontSize(18);
-        doc.text('Calendar Report', 14, 20);
-        doc.setFontSize(12);
-        doc.text(`Month: ${format(firstDayOfMonth, 'MMMM yyyy')}`, 14, 30);
-        doc.text(`Generated on: ${format(new Date(), 'MMMM dd, yyyy')}`, 14, 37);
-        
-        // Add summary table
-        doc.setFontSize(14);
-        doc.text('Monthly Summary', 14, 50);
-        
-        doc.setFontSize(10);
-        doc.text('Total Events:', 20, 60);
-        doc.text(String(monthEvents.length), 80, 60);
-        doc.text('Egg Collections:', 20, 67);
-        doc.text(String(eggEvents), 80, 67);
-        doc.text('Feed Distributions:', 20, 74);
-        doc.text(String(feedEvents), 80, 74);
-        doc.text('Vaccinations:', 20, 81);
-        doc.text(String(vaccinationEvents), 80, 81);
-        doc.text('Sales:', 20, 88);
-        doc.text(String(saleEvents), 80, 88);
-        
-        // Events list
-        doc.setFontSize(14);
-        doc.text('Events List', 14, 100);
-        
-        let yPos = 110;
-        
-        // Column headers
-        doc.setFontSize(10);
-        doc.text('Date', 20, yPos);
-        doc.text('Type', 60, yPos);
-        doc.text('Title', 100, yPos);
-        yPos += 7;
-        
-        // Add events (limited to avoid overflow)
-        const eventsToShow = monthEvents.slice(0, 20);
-        eventsToShow.forEach(event => {
-          if (yPos > 270) {
-            doc.addPage();
-            yPos = 20;
-            // Add column headers on new page
-            doc.text('Date', 20, yPos);
-            doc.text('Type', 60, yPos);
-            doc.text('Title', 100, yPos);
-            yPos += 7;
-          }
-          
-          doc.text(format(event.date, 'MMM dd, yyyy'), 20, yPos);
-          doc.text(event.type, 60, yPos);
-          doc.text(event.title, 100, yPos);
-          yPos += 7;
-        });
-        
-        // If there are more events than we showed, add a note
-        if (monthEvents.length > eventsToShow.length) {
-          yPos += 7;
-          doc.text(`* ${monthEvents.length - eventsToShow.length} more events not shown`, 20, yPos);
-        }
-        
-        // Save PDF
-        const currentDate = format(new Date(), 'yyyy-MM-dd');
-        doc.save(`calendar_report_${currentDate}.pdf`);
-      }
-      
-      toast.success(`Calendar report generated successfully (${format.toUpperCase()})`);
+      XLSX.writeFile(workbook, fileName);
+      toast.success('Calendar report exported to Excel successfully');
     } catch (error) {
-      console.error('Error generating report:', error);
-      toast.error('Failed to generate report');
+      console.error('Error exporting to Excel:', error);
+      toast.error('Failed to export calendar report');
     }
   };
-  
+
+  // Export to PDF
+  const exportToPDF = () => {
+    try {
+      const data = generateMonthlyReportData();
+      
+      // Initialize PDF
+      const doc = new jsPDF();
+      
+      // Add title
+      doc.setFontSize(18);
+      doc.text(`Calendar Report - ${format(date, 'MMMM yyyy')}`, 14, 22);
+      
+      // Add generation date
+      doc.setFontSize(11);
+      doc.text(`Generated on: ${format(new Date(), 'MMMM dd, yyyy')}`, 14, 30);
+      
+      // Define columns for the table
+      const columns = [
+        { header: 'Date', dataKey: 'date' },
+        { header: 'Egg Collections', dataKey: 'eggDetails' },
+        { header: 'Feed Events', dataKey: 'feedDetails' },
+        { header: 'Vaccinations', dataKey: 'vaccinationDetails' },
+        { header: 'Sales', dataKey: 'salesDetails' }
+      ];
+      
+      // Create table rows
+      const rows = data.map(day => [
+        format(new Date(day.date), 'MMM dd, yyyy'),
+        day.eggDetails || '-',
+        day.feedDetails || '-',
+        day.vaccinationDetails || '-',
+        day.salesDetails || '-'
+      ]);
+      
+      // Add the table to PDF
+      doc.autoTable({
+        head: [columns.map(col => col.header)],
+        body: rows,
+        startY: 40,
+        styles: { fontSize: 9, cellPadding: 3 },
+        headStyles: { fillColor: [60, 108, 64] } // Lusoi green color
+      });
+      
+      // Save the PDF
+      const fileName = `calendar_report_${format(date, 'yyyy-MM')}.pdf`;
+      doc.save(fileName);
+      
+      toast.success('Calendar report exported to PDF successfully');
+    } catch (error) {
+      console.error('Error exporting to PDF:', error);
+      toast.error('Failed to export calendar report');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight">Calendar</h1>
-        <ReportButton 
-          onExcelExport={() => handleGenerateReport('excel')} 
-          onPdfExport={() => handleGenerateReport('pdf')} 
-        />
+        <div className="flex gap-2">
+          <ReportButton
+            onExcelExport={exportToExcel}
+            onPdfExport={exportToPDF}
+          />
+          <Select
+            value={view}
+            onValueChange={(value: 'month' | 'list') => setView(value)}
+          >
+            <SelectTrigger className="w-[120px]">
+              <SelectValue placeholder="View" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="month">Month</SelectItem>
+              <SelectItem value="list">List</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Select
+            value={eventFilter}
+            onValueChange={setEventFilter}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter events" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Events</SelectItem>
+              <SelectItem value="egg-collection">Egg Collections</SelectItem>
+              <SelectItem value="feed">Feed</SelectItem>
+              <SelectItem value="vaccination">Vaccinations</SelectItem>
+              <SelectItem value="sale">Sales</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {/* Calendar */}
-        <Card className="md:col-span-3">
-          <CardHeader className="space-y-1">
-            <div className="flex items-center justify-between">
-              <CardTitle>{format(firstDayOfMonth, 'MMMM yyyy')}</CardTitle>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={previousMonth}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={nextMonth}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            <CardDescription>
-              Farm activity planner and scheduler
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-7 gap-px mt-2">
-              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-                <div key={day} className="text-center text-sm font-medium text-muted-foreground py-2">
-                  {day}
-                </div>
-              ))}
-              
-              {days.map((day, dayIdx) => {
-                const eventsOnDay = calendarEvents.filter(event => 
-                  isEqual(event.date, day)
-                );
-                
-                const eventTypes = new Set(eventsOnDay.map(event => event.type));
-                
-                return (
-                  <div
-                    key={day.toString()}
-                    className={classNames(
-                      'min-h-[6rem] border border-border',
-                      !isSameMonth(day, firstDayOfMonth) && 'bg-muted/30 text-muted-foreground',
-                      isSameMonth(day, firstDayOfMonth) && 'bg-card',
-                      'p-2'
-                    )}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => setSelectedDay(day)}
-                      className={cn(
-                        'mx-auto flex h-8 w-8 items-center justify-center rounded-full text-sm',
-                        isEqual(day, selectedDay) && 'bg-primary text-primary-foreground',
-                        isToday(day) && !isEqual(day, selectedDay) && 'border border-primary text-primary',
-                        'hover:bg-muted'
-                      )}
-                    >
-                      <time dateTime={format(day, 'yyyy-MM-dd')}>
-                        {format(day, 'd')}
-                      </time>
-                    </button>
-                    
-                    <div className="h-1"></div> {/* Spacing */}
-                    
-                    <div className="space-y-1">
-                      {eventTypes.has('egg') && (
-                        <div className="flex items-center gap-1 text-xs text-green-600">
-                          <Egg className="h-3 w-3" />
-                          <span>
-                            {eventsOnDay.filter(e => e.type === 'egg').length} collections
-                          </span>
-                        </div>
-                      )}
-                      
-                      {eventTypes.has('feed') && (
-                        <div className="flex items-center gap-1 text-xs text-amber-600">
-                          <Package className="h-3 w-3" />
-                          <span>
-                            {eventsOnDay.filter(e => e.type === 'feed').length} feeds
-                          </span>
-                        </div>
-                      )}
-                      
-                      {eventTypes.has('vaccination') && (
-                        <div className="flex items-center gap-1 text-xs text-blue-600">
-                          <Syringe className="h-3 w-3" />
-                          <span>
-                            {eventsOnDay.filter(e => e.type === 'vaccination').length} vaccinations
-                          </span>
-                        </div>
-                      )}
-                      
-                      {eventTypes.has('sale') && (
-                        <div className="flex items-center gap-1 text-xs text-purple-600">
-                          <Circle className="h-3 w-3" />
-                          <span>
-                            {eventsOnDay.filter(e => e.type === 'sale').length} sales
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            
-            <div className="flex flex-wrap gap-4 mt-6 justify-center">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-green-600"></div>
-                <span className="text-sm">Egg Collection</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-amber-600"></div>
-                <span className="text-sm">Feed Distribution</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-blue-600"></div>
-                <span className="text-sm">Vaccination</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-purple-600"></div>
-                <span className="text-sm">Sale</span>
-              </div>
-            </div>
+
+      {view === 'month' ? (
+        <Card>
+          <CardContent className="pt-6">
+            <Calendar
+              mode="single"
+              selected={date}
+              onSelect={(newDate) => newDate && setDate(newDate)}
+              className="rounded-md border"
+              components={{
+                Day: ({ day }) => renderDay(day),
+              }}
+            />
           </CardContent>
         </Card>
-        
-        {/* Selected day events */}
+      ) : (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CalendarIcon className="h-5 w-5" />
-              <span>{format(selectedDay, 'MMMM d, yyyy')}</span>
-            </CardTitle>
+            <CardTitle>Events - {format(date, 'MMMM yyyy')}</CardTitle>
             <CardDescription>
-              {isToday(selectedDay) ? "Today's events" : "Events for selected day"}
+              All farm activities for the selected period
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {eventsForSelectedDay.length > 0 ? (
-              <div className="space-y-4">
-                {eventsForSelectedDay.map(event => (
-                  <div key={event.id} className="border rounded-md p-3 bg-card">
-                    <div className="flex items-center">
-                      {event.type === 'egg' && <Egg className="h-4 w-4 text-green-600 mr-2" />}
-                      {event.type === 'feed' && <Package className="h-4 w-4 text-amber-600 mr-2" />}
-                      {event.type === 'vaccination' && <Syringe className="h-4 w-4 text-blue-600 mr-2" />}
-                      {event.type === 'sale' && <Circle className="h-4 w-4 text-purple-600 mr-2" />}
-                      <h4 className="font-medium">{event.title}</h4>
-                    </div>
-                    {event.description && (
-                      <p className="text-sm text-muted-foreground mt-1">{event.description}</p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-40 text-center">
-                <div className="text-muted-foreground">
-                  <p>No events scheduled for this day</p>
-                  <p className="text-sm mt-1">
-                    Activities will appear here when scheduled
-                  </p>
-                </div>
-              </div>
-            )}
+            <div className="flex space-x-2 mb-4">
+              <Badge className="bg-green-500">Egg Collection</Badge>
+              <Badge className="bg-orange-500">Feed</Badge>
+              <Badge className="bg-blue-500">Vaccination</Badge>
+              <Badge className="bg-purple-500">Sale</Badge>
+            </div>
+            
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Details</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredEvents.length > 0 ? (
+                  filteredEvents.map((event, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{format(event.date, 'MMM dd, yyyy')}</TableCell>
+                      <TableCell>
+                        <Badge className={
+                          event.type === 'egg-collection' ? 'bg-green-500' : 
+                          event.type === 'feed' ? 'bg-orange-500' : 
+                          event.type === 'vaccination' ? 'bg-blue-500' : 
+                          'bg-purple-500'
+                        }>
+                          {event.title}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{event.detail}</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-center py-4 text-muted-foreground">
+                      No events for this day
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
-      </div>
+      )}
     </div>
   );
 };
