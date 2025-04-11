@@ -29,8 +29,10 @@ const UserManagement = () => {
   const [newUser, setNewUser] = useState({
     name: '',
     email: '',
+    password: 'password123', // Default temporary password
     role: 'ProductionManager' as UserRole,
     active: true,
+    initialLoginComplete: false, // New users need to change password on first login
     moduleAccess: {
       dashboard: true,
       batches: false,
@@ -67,6 +69,14 @@ const UserManagement = () => {
     setNewUser({
       ...newUser,
       email: e.target.value
+    });
+  };
+  
+  // Handle password change for new users
+  const handleTempPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewUser({
+      ...newUser,
+      password: e.target.value
     });
   };
   
@@ -184,7 +194,15 @@ const UserManagement = () => {
       return;
     }
     
-    addUser(newUser);
+    if (!newUser.password || newUser.password.trim() === '') {
+      toast.error('Temporary password is required');
+      return;
+    }
+    
+    addUser({
+      ...newUser,
+      initialLoginComplete: false // Ensure new users must change password
+    });
     toast.success('User added successfully');
     setIsAddDialogOpen(false);
     resetNewUserForm();
@@ -211,8 +229,10 @@ const UserManagement = () => {
     setNewUser({
       name: '',
       email: '',
+      password: 'password123',
       role: 'ProductionManager',
       active: true,
+      initialLoginComplete: false,
       moduleAccess: {
         dashboard: true,
         batches: false,
@@ -303,6 +323,7 @@ const UserManagement = () => {
             applyRoleTemplate={applyRoleTemplate}
             handleNameChange={handleNameChange}
             handleEmailChange={handleEmailChange}
+            handleTempPasswordChange={handleTempPasswordChange}
             toggleModuleAccess={toggleModuleAccess}
             setUserActive={setUserActive}
           />

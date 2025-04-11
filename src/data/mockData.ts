@@ -1,3 +1,4 @@
+
 import { 
   Batch, 
   EggCollection, 
@@ -341,6 +342,8 @@ export const mockUsers: User[] = [
     active: true,
     createdAt: '2024-01-01',
     lastLogin: '2024-04-10',
+    password: 'password123',
+    initialLoginComplete: true,
     moduleAccess: {
       dashboard: true,
       batches: true,
@@ -362,6 +365,8 @@ export const mockUsers: User[] = [
     active: true,
     createdAt: '2024-01-05',
     lastLogin: '2024-04-09',
+    password: 'password123',
+    initialLoginComplete: true,
     moduleAccess: {
       dashboard: true,
       batches: true,
@@ -383,6 +388,8 @@ export const mockUsers: User[] = [
     active: true,
     createdAt: '2024-01-10',
     lastLogin: '2024-04-08',
+    password: 'password123',
+    initialLoginComplete: true,
     moduleAccess: {
       dashboard: true,
       batches: true,
@@ -404,6 +411,8 @@ export const mockUsers: User[] = [
     active: true,
     createdAt: '2024-01-15',
     lastLogin: '2024-04-07',
+    password: 'password123',
+    initialLoginComplete: true,
     moduleAccess: {
       dashboard: true,
       batches: false,
@@ -425,6 +434,8 @@ export const mockUsers: User[] = [
     active: true,
     createdAt: '2024-01-20',
     lastLogin: '2024-04-06',
+    password: 'password123',
+    initialLoginComplete: true,
     moduleAccess: {
       dashboard: true,
       batches: true,
@@ -446,6 +457,8 @@ export const mockUsers: User[] = [
     active: true,
     createdAt: '2024-02-10',
     lastLogin: '2024-04-05',
+    password: 'password123',
+    initialLoginComplete: true,
     moduleAccess: {
       dashboard: true,
       batches: false,
@@ -467,6 +480,8 @@ export const mockUsers: User[] = [
     active: true,
     createdAt: '2024-02-15',
     lastLogin: '2024-04-04',
+    password: 'password123',
+    initialLoginComplete: true,
     moduleAccess: {
       dashboard: true,
       batches: false,

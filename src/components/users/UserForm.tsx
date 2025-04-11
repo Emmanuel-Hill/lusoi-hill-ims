@@ -28,6 +28,7 @@ interface UserFormProps {
   applyRoleTemplate: (role: UserRole) => void;
   handleNameChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleEmailChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleTempPasswordChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   toggleModuleAccess: (module: keyof ModuleAccess, value: boolean) => void;
   setUserActive: (active: boolean) => void;
 }
@@ -40,6 +41,7 @@ const UserForm: React.FC<UserFormProps> = ({
   applyRoleTemplate,
   handleNameChange,
   handleEmailChange,
+  handleTempPasswordChange,
   toggleModuleAccess,
   setUserActive
 }) => {
@@ -80,6 +82,21 @@ const UserForm: React.FC<UserFormProps> = ({
               {!isNew && ' when name is changed'}
             </p>
           </div>
+          {isNew && (
+            <div className="space-y-2">
+              <Label htmlFor="temp-password">Temporary Password</Label>
+              <Input 
+                id="temp-password"
+                type="password"
+                placeholder="Set a temporary password" 
+                value={user.password || ''}
+                onChange={handleTempPasswordChange}
+              />
+              <p className="text-xs text-muted-foreground">
+                User will be prompted to change this password on first login
+              </p>
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor={isNew ? "role" : "edit-role"}>Role</Label>
             <Select 
