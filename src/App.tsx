@@ -14,6 +14,7 @@ import Vaccination from "./pages/Vaccination";
 import Sales from "./pages/Sales";
 import Customers from "./pages/Customers";
 import CalendarPage from "./pages/CalendarPage";
+import UserManagement from "./pages/UserManagement";
 import NotFound from "./pages/NotFound";
 
 import { AppProvider } from "./context/AppContext";
@@ -90,6 +91,14 @@ const App = () => (
                 element={
                   <DashboardLayout>
                     <CalendarPage />
+                  </DashboardLayout>
+                }
+              />
+              <Route
+                path="/users"
+                element={
+                  <DashboardLayout>
+                    <UserManagement />
                   </DashboardLayout>
                 }
               />

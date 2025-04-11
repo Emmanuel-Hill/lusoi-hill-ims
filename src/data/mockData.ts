@@ -1,4 +1,3 @@
-
 import { 
   Batch, 
   EggCollection, 
@@ -10,7 +9,8 @@ import {
   Product,
   Sale,
   Customer,
-  Order
+  Order,
+  User
 } from '../types';
 
 // Mock Batches
@@ -328,5 +328,114 @@ export const mockOrders: Order[] = [
     ],
     status: 'Pending',
     notes: 'Monthly order'
+  }
+];
+
+// Mock Users with different roles
+export const mockUsers: User[] = [
+  {
+    id: '1',
+    name: 'Admin User',
+    email: 'admin@lusoifarm.com',
+    role: 'Admin',
+    active: true,
+    createdAt: '2024-01-01',
+    lastLogin: '2024-04-10',
+    moduleAccess: {
+      dashboard: true,
+      batches: true,
+      eggCollection: true,
+      feedManagement: true,
+      vaccination: true,
+      sales: true,
+      customers: true,
+      calendar: true,
+      reports: true,
+      userManagement: true
+    }
+  },
+  {
+    id: '2',
+    name: 'Production Manager',
+    email: 'production@lusoifarm.com',
+    role: 'ProductionManager',
+    active: true,
+    createdAt: '2024-01-05',
+    lastLogin: '2024-04-09',
+    moduleAccess: {
+      dashboard: true,
+      batches: true,
+      eggCollection: true,
+      feedManagement: true,
+      vaccination: true,
+      sales: false,
+      customers: false,
+      calendar: true,
+      reports: true,
+      userManagement: false
+    }
+  },
+  {
+    id: '3',
+    name: 'Operations Manager',
+    email: 'operations@lusoifarm.com',
+    role: 'OperationsManager',
+    active: true,
+    createdAt: '2024-01-10',
+    lastLogin: '2024-04-08',
+    moduleAccess: {
+      dashboard: true,
+      batches: true,
+      eggCollection: true,
+      feedManagement: true,
+      vaccination: true,
+      sales: true,
+      customers: true,
+      calendar: true,
+      reports: true,
+      userManagement: true
+    }
+  },
+  {
+    id: '4',
+    name: 'Sales Manager',
+    email: 'sales@lusoifarm.com',
+    role: 'SalesManager',
+    active: true,
+    createdAt: '2024-01-15',
+    lastLogin: '2024-04-07',
+    moduleAccess: {
+      dashboard: true,
+      batches: false,
+      eggCollection: false,
+      feedManagement: false,
+      vaccination: false,
+      sales: true,
+      customers: true,
+      calendar: true,
+      reports: true,
+      userManagement: false
+    }
+  },
+  {
+    id: '5',
+    name: 'Warehouse Manager',
+    email: 'warehouse@lusoifarm.com',
+    role: 'WarehouseManager',
+    active: true,
+    createdAt: '2024-01-20',
+    lastLogin: '2024-04-06',
+    moduleAccess: {
+      dashboard: true,
+      batches: true,
+      eggCollection: true,
+      feedManagement: false,
+      vaccination: false,
+      sales: false,
+      customers: false,
+      calendar: true,
+      reports: false,
+      userManagement: false
+    }
   }
 ];

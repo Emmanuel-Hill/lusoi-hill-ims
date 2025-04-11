@@ -11,7 +11,10 @@ import {
   Product,
   Sale,
   Customer,
-  Order
+  Order,
+  User,
+  ModuleAccess,
+  UserRole
 } from '../types';
 
 import {
@@ -25,7 +28,8 @@ import {
   mockProducts,
   mockSales,
   mockCustomers,
-  mockOrders
+  mockOrders,
+  mockUsers
 } from '../data/mockData';
 
 interface AppContextType {
@@ -41,6 +45,8 @@ interface AppContextType {
   // Feed Management
   feedTypes: FeedType[];
   addFeedType: (feedType: Omit<FeedType, 'id'>) => void;
+  updateFeedType: (feedType: FeedType) => void;
+  deleteFeedType: (id: string) => void;
   feedInventory: FeedInventory[];
   addFeedInventory: (inventory: Omit<FeedInventory, 'id'>) => void;
   feedConsumption: FeedConsumption[];
@@ -65,6 +71,15 @@ interface AppContextType {
   orders: Order[];
   addOrder: (order: Omit<Order, 'id'>) => void;
   updateOrderStatus: (id: string, status: Order['status']) => void;
+  
+  // User Management
+  users: User[];
+  currentUser: User | null;
+  addUser: (user: Omit<User, 'id' | 'createdAt'>) => void;
+  updateUser: (user: User) => void;
+  deleteUser: (id: string) => void;
+  setCurrentUser: (user: User | null) => void;
+  hasAccess: (module: keyof ModuleAccess) => boolean;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -90,6 +105,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // State for Customer Management
   const [customers, setCustomers] = useState<Customer[]>(mockCustomers);
   const [orders, setOrders] = useState<Order[]>(mockOrders);
+  
+  // State for User Management
+  const [users, setUsers] = useState<User[]>(mockUsers);
+  const [currentUser, setCurrentUser] = useState<User | null>(mockUsers[0] || null);
 
   // Functions for Batches
   const addBatch = (batch: Omit<Batch, 'id' | 'createdAt'>) => {
@@ -123,6 +142,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       id: Date.now().toString()
     };
     setFeedTypes([...feedTypes, newFeedType]);
+  };
+  
+  const updateFeedType = (updatedFeedType: FeedType) => {
+    setFeedTypes(feedTypes.map(feedType => 
+      feedType.id === updatedFeedType.id ? updatedFeedType : feedType
+    ));
+  };
+  
+  const deleteFeedType = (id: string) => {
+    setFeedTypes(feedTypes.filter(feedType => feedType.id !== id));
   };
 
   const addFeedInventory = (inventory: Omit<FeedInventory, 'id'>) => {
@@ -210,6 +239,32 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       order.id === id ? { ...order, status } : order
     ));
   };
+  
+  // Functions for User Management
+  const addUser = (user: Omit<User, 'id' | 'createdAt'>) => {
+    const newUser: User = {
+      ...user,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString().split('T')[0]
+    };
+    setUsers([...users, newUser]);
+  };
+  
+  const updateUser = (updatedUser: User) => {
+    setUsers(users.map(user => 
+      user.id === updatedUser.id ? updatedUser : user
+    ));
+  };
+  
+  const deleteUser = (id: string) => {
+    setUsers(users.filter(user => user.id !== id));
+  };
+  
+  // Function to check if current user has access to a specific module
+  const hasAccess = (module: keyof ModuleAccess): boolean => {
+    if (!currentUser) return false;
+    return currentUser.moduleAccess[module];
+  };
 
   const value = {
     batches,
@@ -219,6 +274,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     addEggCollection,
     feedTypes,
     addFeedType,
+    updateFeedType,
+    deleteFeedType,
     feedInventory,
     addFeedInventory,
     feedConsumption,
@@ -236,7 +293,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     addCustomer,
     orders,
     addOrder,
-    updateOrderStatus
+    updateOrderStatus,
+    users,
+    currentUser,
+    addUser,
+    updateUser,
+    deleteUser,
+    setCurrentUser,
+    hasAccess
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, Navigate } from 'react-router-dom';
 import { 
   Egg,
   Users,
@@ -12,10 +12,20 @@ import {
   Utensils,
   Syringe,
   Calendar,
-  ShoppingCart
+  ShoppingCart,
+  UserCog
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useAppContext } from '@/context/AppContext';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
+import { toast } from 'sonner';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -24,18 +34,43 @@ interface DashboardLayoutProps {
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const location = useLocation();
+  const { hasAccess, users, currentUser, setCurrentUser } = useAppContext();
   
+  // Navigation items with access control
   const navigation = [
-    { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-    { name: 'Batches', href: '/batches', icon: Users },
-    { name: 'Egg Collection', href: '/egg-collection', icon: Egg },
-    { name: 'Feed Management', href: '/feed', icon: Utensils },
-    { name: 'Vaccination', href: '/vaccination', icon: Syringe },
-    { name: 'Sales', href: '/sales', icon: ShoppingCart },
-    { name: 'Customers', href: '/customers', icon: FileText },
-    { name: 'Calendar', href: '/calendar', icon: Calendar },
-    { name: 'Reports', href: '/reports', icon: BarChartHorizontal }
+    { name: 'Dashboard', href: '/', icon: LayoutDashboard, access: 'dashboard' },
+    { name: 'Batches', href: '/batches', icon: Users, access: 'batches' },
+    { name: 'Egg Collection', href: '/egg-collection', icon: Egg, access: 'eggCollection' },
+    { name: 'Feed Management', href: '/feed', icon: Utensils, access: 'feedManagement' },
+    { name: 'Vaccination', href: '/vaccination', icon: Syringe, access: 'vaccination' },
+    { name: 'Sales', href: '/sales', icon: ShoppingCart, access: 'sales' },
+    { name: 'Customers', href: '/customers', icon: FileText, access: 'customers' },
+    { name: 'Calendar', href: '/calendar', icon: Calendar, access: 'calendar' },
+    { name: 'Reports', href: '/reports', icon: BarChartHorizontal, access: 'reports' },
+    { name: 'User Management', href: '/users', icon: UserCog, access: 'userManagement' }
   ];
+  
+  // Check if user has access to current route
+  const currentPath = location.pathname;
+  const currentNavItem = navigation.find(item => 
+    currentPath === item.href || 
+    (currentPath !== '/' && item.href !== '/' && currentPath.startsWith(item.href))
+  );
+  
+  // If accessing a restricted page, redirect to dashboard
+  if (currentNavItem && !hasAccess(currentNavItem.access as any)) {
+    toast.error(`You don't have access to ${currentNavItem.name}`);
+    return <Navigate to="/" replace />;
+  }
+  
+  // Handle user switch
+  const handleUserSwitch = (userId: string) => {
+    const userToSwitch = users.find(user => user.id === userId);
+    if (userToSwitch) {
+      setCurrentUser(userToSwitch);
+      toast.success(`Switched to ${userToSwitch.name}`);
+    }
+  };
 
   return (
     <div className="min-h-screen flex">
@@ -69,6 +104,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           <nav className="flex-1 space-y-1 px-2 py-4">
             {navigation.map((item) => {
               const isActive = item.href === location.pathname;
+              // Only show menu items the user has access to
+              if (!hasAccess(item.access as any)) return null;
+              
               return (
                 <Link
                   key={item.name}
@@ -121,9 +159,29 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             >
               <Menu className="h-6 w-6" />
             </Button>
-            <div className="flex items-center">
-              <span className="px-4 py-2 text-sm font-medium text-gray-700">
-                Admin User
+            <div className="flex items-center space-x-4">
+              {/* User selector - for demo purposes */}
+              <div className="hidden md:block">
+                <Select
+                  value={currentUser?.id || ''}
+                  onValueChange={handleUserSwitch}
+                >
+                  <SelectTrigger className="w-[200px] border-none">
+                    <SelectValue 
+                      placeholder={currentUser?.name || 'Select User'}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {users.map(user => (
+                      <SelectItem key={user.id} value={user.id}>
+                        {user.name} ({user.role})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <span className="md:hidden px-4 py-2 text-sm font-medium text-gray-700">
+                {currentUser?.name || 'User'}
               </span>
             </div>
           </div>

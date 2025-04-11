@@ -114,3 +114,37 @@ export interface OrderItem {
   productId: string;
   quantity: number;
 }
+
+// Types for User Management
+export type UserRole = 
+  | 'Admin'           // Full access to all modules
+  | 'ProductionManager'  // Access to farm-related modules
+  | 'OperationsManager'  // Full access to all modules
+  | 'Owner'           // Full access to all modules
+  | 'ITSpecialist'    // Full access to all modules
+  | 'SalesManager'    // Access to sales and customer modules
+  | 'WarehouseManager'; // Access to inventory and tracking modules
+
+export interface ModuleAccess {
+  dashboard: boolean;
+  batches: boolean;
+  eggCollection: boolean;
+  feedManagement: boolean;
+  vaccination: boolean;
+  sales: boolean;
+  customers: boolean;
+  calendar: boolean;
+  reports: boolean;
+  userManagement: boolean;
+}
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  active: boolean;
+  createdAt: string;
+  lastLogin?: string;
+  moduleAccess: ModuleAccess;
+}
