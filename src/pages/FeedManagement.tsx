@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import {
@@ -89,7 +90,11 @@ const FeedManagement = () => {
     }
     
     if (isTypeEditMode && selectedFeedType) {
-      updateFeedType(selectedFeedType.id, feedTypeForm);
+      // Fix: updateFeedType expects only one argument (the updated feed type)
+      updateFeedType({
+        ...selectedFeedType,
+        ...feedTypeForm
+      });
       toast.success('Feed type updated successfully');
     } else {
       addFeedType(feedTypeForm);

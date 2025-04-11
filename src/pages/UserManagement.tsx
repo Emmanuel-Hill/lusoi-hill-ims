@@ -80,6 +80,53 @@ const UserManagement = () => {
     } as ModuleAccess
   });
   
+  // Generate email from name
+  const generateEmail = (name: string): string => {
+    // Remove any special characters and spaces, convert to lowercase
+    const cleanName = name.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '');
+    return `${cleanName}@lusoihillfarm.co.ke`;
+  };
+
+  // Handle name change and auto-generate email
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const name = e.target.value;
+    setNewUser({
+      ...newUser,
+      name,
+      email: generateEmail(name)
+    });
+  };
+  
+  // Handle email change for direct modifications
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewUser({
+      ...newUser,
+      email: e.target.value
+    });
+  };
+  
+  // Handle name change and auto-generate email for edit mode
+  const handleEditNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!selectedUser) return;
+    
+    const name = e.target.value;
+    setSelectedUser({
+      ...selectedUser,
+      name,
+      email: generateEmail(name)
+    });
+  };
+  
+  // Handle email change for direct modifications in edit mode
+  const handleEditEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!selectedUser) return;
+    
+    setSelectedUser({
+      ...selectedUser,
+      email: e.target.value
+    });
+  };
+  
   // Handle role templates
   const applyRoleTemplate = (role: UserRole) => {
     let moduleAccess: ModuleAccess = {
@@ -266,7 +313,7 @@ const UserManagement = () => {
                     id="name" 
                     placeholder="Enter user name" 
                     value={newUser.name}
-                    onChange={(e) => setNewUser({...newUser, name: e.target.value})}
+                    onChange={handleNameChange}
                   />
                 </div>
                 <div className="space-y-2">
@@ -274,10 +321,13 @@ const UserManagement = () => {
                   <Input 
                     id="email" 
                     type="email" 
-                    placeholder="Enter user email" 
+                    placeholder="Email will be auto-generated" 
                     value={newUser.email}
-                    onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                    onChange={handleEmailChange}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Email will be auto-generated using the domain lusoihillfarm.co.ke
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="role">Role</Label>
@@ -431,7 +481,7 @@ const UserManagement = () => {
                   <Input 
                     id="edit-name" 
                     value={selectedUser.name}
-                    onChange={(e) => setSelectedUser({...selectedUser, name: e.target.value})}
+                    onChange={handleEditNameChange}
                   />
                 </div>
                 <div className="space-y-2">
@@ -440,8 +490,11 @@ const UserManagement = () => {
                     id="edit-email" 
                     type="email" 
                     value={selectedUser.email}
-                    onChange={(e) => setSelectedUser({...selectedUser, email: e.target.value})}
+                    onChange={handleEditEmailChange}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Email will be auto-generated using the domain lusoihillfarm.co.ke when name is changed
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="edit-role">Role</Label>
