@@ -437,5 +437,47 @@ export const mockUsers: User[] = [
       reports: false,
       userManagement: false
     }
+  },
+  {
+    id: '6',
+    name: 'Sales Team Member',
+    email: 'salesteam@lusoihillfarm.co.ke',
+    role: 'SalesTeamMember',
+    active: true,
+    createdAt: '2024-02-10',
+    lastLogin: '2024-04-05',
+    moduleAccess: {
+      dashboard: true,
+      batches: false,
+      eggCollection: false,
+      feedManagement: false,
+      vaccination: false,
+      sales: true,
+      customers: true,
+      calendar: true,
+      reports: false,
+      userManagement: false
+    }
+  },
+  {
+    id: '7',
+    name: 'Company Driver',
+    email: 'driver@lusoihillfarm.co.ke',
+    role: 'Driver',
+    active: true,
+    createdAt: '2024-02-15',
+    lastLogin: '2024-04-04',
+    moduleAccess: {
+      dashboard: true,
+      batches: false,
+      eggCollection: false,
+      feedManagement: false,
+      vaccination: false,
+      sales: false,
+      customers: true,
+      calendar: true,
+      reports: false,
+      userManagement: false
+    }
   }
 ];

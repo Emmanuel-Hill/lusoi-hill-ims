@@ -123,6 +123,8 @@ export type UserRole =
   | 'Owner'           // Full access to all modules
   | 'ITSpecialist'    // Full access to all modules
   | 'SalesManager'    // Access to sales and customer modules
+  | 'SalesTeamMember' // Access to sales and customer modules with limited permissions
+  | 'Driver'          // Access to delivery-related modules
   | 'WarehouseManager'; // Access to inventory and tracking modules
 
 export interface ModuleAccess {

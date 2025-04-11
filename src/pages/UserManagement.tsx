@@ -8,50 +8,15 @@ import {
   CardHeader, 
   CardTitle 
 } from '@/components/ui/card';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
-} from '@/components/ui/dialog';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
+import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { 
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { User, UserRole, ModuleAccess } from '@/types';
-import { formatDate } from '@/utils/formatUtils';
-import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Edit, Trash2, Check, X } from 'lucide-react';
+import { PlusCircle } from 'lucide-react';
+
+// Import the refactored components
+import UsersTable from '@/components/users/UsersTable';
+import UserForm from '@/components/users/UserForm';
 
 const UserManagement = () => {
   const { users, addUser, updateUser, deleteUser, hasAccess } = useAppContext();
@@ -172,6 +137,21 @@ const UserManagement = () => {
           reports: true
         };
         break;
+      case 'SalesTeamMember':
+        moduleAccess = {
+          ...moduleAccess,
+          sales: true,
+          customers: true,
+          calendar: true
+        };
+        break;
+      case 'Driver':
+        moduleAccess = {
+          ...moduleAccess,
+          customers: true,
+          calendar: true
+        };
+        break;
       case 'WarehouseManager':
         moduleAccess = {
           ...moduleAccess,
@@ -275,6 +255,21 @@ const UserManagement = () => {
     }
   };
   
+  // Handle setting user active status
+  const setUserActive = (active: boolean) => {
+    if (isEditDialogOpen && selectedUser) {
+      setSelectedUser({
+        ...selectedUser,
+        active
+      });
+    } else {
+      setNewUser({
+        ...newUser,
+        active
+      });
+    }
+  };
+  
   if (!hasAccess('userManagement')) {
     return (
       <Card>
@@ -300,98 +295,17 @@ const UserManagement = () => {
               Add User
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-3xl">
-            <DialogHeader>
-              <DialogTitle>Add New User</DialogTitle>
-              <DialogDescription>Create a new user account and assign permissions</DialogDescription>
-            </DialogHeader>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
-                  <Input 
-                    id="name" 
-                    placeholder="Enter user name" 
-                    value={newUser.name}
-                    onChange={handleNameChange}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input 
-                    id="email" 
-                    type="email" 
-                    placeholder="Email will be auto-generated" 
-                    value={newUser.email}
-                    onChange={handleEmailChange}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Email will be auto-generated using the domain lusoihillfarm.co.ke
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="role">Role</Label>
-                  <Select 
-                    value={newUser.role} 
-                    onValueChange={(value: UserRole) => {
-                      applyRoleTemplate(value);
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Admin">Admin</SelectItem>
-                      <SelectItem value="ProductionManager">Production Manager</SelectItem>
-                      <SelectItem value="OperationsManager">Operations Manager</SelectItem>
-                      <SelectItem value="Owner">Owner</SelectItem>
-                      <SelectItem value="ITSpecialist">IT Specialist</SelectItem>
-                      <SelectItem value="SalesManager">Sales Manager</SelectItem>
-                      <SelectItem value="WarehouseManager">Warehouse Manager</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex items-center space-x-2 pt-2">
-                  <Checkbox 
-                    id="active" 
-                    checked={newUser.active}
-                    onCheckedChange={(checked) => 
-                      setNewUser({...newUser, active: checked as boolean})
-                    }
-                  />
-                  <Label htmlFor="active" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                    Active Account
-                  </Label>
-                </div>
-              </div>
-              
-              <div className="border rounded-lg p-3">
-                <h3 className="text-sm font-semibold mb-3">Module Access</h3>
-                <div className="space-y-2">
-                  {Object.keys(newUser.moduleAccess).map((module) => (
-                    <div key={module} className="flex items-center space-x-2">
-                      <Checkbox 
-                        id={`module-${module}`} 
-                        checked={newUser.moduleAccess[module as keyof ModuleAccess]}
-                        onCheckedChange={(checked) => 
-                          toggleModuleAccess(module as keyof ModuleAccess, checked as boolean)
-                        }
-                      />
-                      <Label htmlFor={`module-${module}`} className="text-sm capitalize">
-                        {module === 'eggCollection' ? 'Egg Collection' : 
-                          module === 'feedManagement' ? 'Feed Management' : 
-                          module === 'userManagement' ? 'User Management' : module}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
-              <Button onClick={handleAddUser}>Add User</Button>
-            </DialogFooter>
-          </DialogContent>
+          <UserForm
+            user={newUser}
+            onSubmit={handleAddUser}
+            onCancel={() => setIsAddDialogOpen(false)}
+            isNew={true}
+            applyRoleTemplate={applyRoleTemplate}
+            handleNameChange={handleNameChange}
+            handleEmailChange={handleEmailChange}
+            toggleModuleAccess={toggleModuleAccess}
+            setUserActive={setUserActive}
+          />
         </Dialog>
       </div>
       
@@ -401,164 +315,28 @@ const UserManagement = () => {
           <CardDescription>Manage system users and their permissions</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead>Last Login</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>{user.name}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.role.replace(/([A-Z])/g, ' $1').trim()}</TableCell>
-                  <TableCell>
-                    {user.active ? (
-                      <Badge variant="success" className="bg-green-500 hover:bg-green-600">Active</Badge>
-                    ) : (
-                      <Badge variant="destructive">Inactive</Badge>
-                    )}
-                  </TableCell>
-                  <TableCell>{formatDate(user.createdAt)}</TableCell>
-                  <TableCell>{user.lastLogin ? formatDate(user.lastLogin) : 'Never'}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" size="icon" onClick={() => openEditDialog(user)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="outline" size="icon" className="text-destructive">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete User</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to delete {user.name}? This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction 
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              onClick={() => handleDeleteUser(user.id)}
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <UsersTable 
+            users={users} 
+            onEdit={openEditDialog} 
+            onDelete={handleDeleteUser} 
+          />
         </CardContent>
       </Card>
       
       {/* Edit User Dialog */}
       {selectedUser && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="max-w-3xl">
-            <DialogHeader>
-              <DialogTitle>Edit User</DialogTitle>
-              <DialogDescription>Update user details and permissions</DialogDescription>
-            </DialogHeader>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-name">Name</Label>
-                  <Input 
-                    id="edit-name" 
-                    value={selectedUser.name}
-                    onChange={handleEditNameChange}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-email">Email</Label>
-                  <Input 
-                    id="edit-email" 
-                    type="email" 
-                    value={selectedUser.email}
-                    onChange={handleEditEmailChange}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Email will be auto-generated using the domain lusoihillfarm.co.ke when name is changed
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-role">Role</Label>
-                  <Select 
-                    value={selectedUser.role} 
-                    onValueChange={(value: UserRole) => {
-                      applyRoleTemplate(value);
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Admin">Admin</SelectItem>
-                      <SelectItem value="ProductionManager">Production Manager</SelectItem>
-                      <SelectItem value="OperationsManager">Operations Manager</SelectItem>
-                      <SelectItem value="Owner">Owner</SelectItem>
-                      <SelectItem value="ITSpecialist">IT Specialist</SelectItem>
-                      <SelectItem value="SalesManager">Sales Manager</SelectItem>
-                      <SelectItem value="WarehouseManager">Warehouse Manager</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex items-center space-x-2 pt-2">
-                  <Checkbox 
-                    id="edit-active" 
-                    checked={selectedUser.active}
-                    onCheckedChange={(checked) => 
-                      setSelectedUser({...selectedUser, active: checked as boolean})
-                    }
-                  />
-                  <Label htmlFor="edit-active">
-                    Active Account
-                  </Label>
-                </div>
-              </div>
-              
-              <div className="border rounded-lg p-3">
-                <h3 className="text-sm font-semibold mb-3">Module Access</h3>
-                <div className="space-y-2">
-                  {Object.keys(selectedUser.moduleAccess).map((module) => (
-                    <div key={module} className="flex items-center space-x-2">
-                      <Checkbox 
-                        id={`edit-module-${module}`} 
-                        checked={selectedUser.moduleAccess[module as keyof ModuleAccess]}
-                        onCheckedChange={(checked) => 
-                          toggleModuleAccess(module as keyof ModuleAccess, checked as boolean)
-                        }
-                      />
-                      <Label htmlFor={`edit-module-${module}`} className="text-sm capitalize">
-                        {module === 'eggCollection' ? 'Egg Collection' : 
-                          module === 'feedManagement' ? 'Feed Management' : 
-                          module === 'userManagement' ? 'User Management' : module}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
-              <Button onClick={handleUpdateUser}>Save Changes</Button>
-            </DialogFooter>
-          </DialogContent>
+          <UserForm
+            user={selectedUser}
+            onSubmit={handleUpdateUser}
+            onCancel={() => setIsEditDialogOpen(false)}
+            isNew={false}
+            applyRoleTemplate={applyRoleTemplate}
+            handleNameChange={handleEditNameChange}
+            handleEmailChange={handleEditEmailChange}
+            toggleModuleAccess={toggleModuleAccess}
+            setUserActive={setUserActive}
+          />
         </Dialog>
       )}
     </div>
