@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode } from 'react';
 import { 
   Batch, 
@@ -80,9 +79,48 @@ interface AppContextType {
   deleteUser: (id: string) => void;
   setCurrentUser: (user: User | null) => void;
   hasAccess: (module: keyof ModuleAccess) => boolean;
+  
+  // Authentication
+  authenticateUser: (email: string, password: string) => User | null;
+  logoutUser: () => void;
+  isInitialLogin: (userId: string) => boolean;
+  setInitialLoginComplete: (userId: string) => void;
+  changeUserPassword: (userId: string, newPassword: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
+
+// Update mock users to include passwords and initialLoginComplete flag
+const updatedMockUsers = mockUsers.map(user => ({
+  ...user,
+  password: 'password123', // Initial password for all users
+  initialLoginComplete: false
+}));
+
+// Create an admin user
+const adminUser: User = {
+  id: 'admin-001',
+  name: 'System Administrator',
+  email: 'admin@lusoihillfarm.co.ke',
+  password: 'admin123', // Initial password for admin
+  role: 'Admin',
+  active: true,
+  createdAt: new Date().toISOString().split('T')[0],
+  lastLogin: null,
+  initialLoginComplete: true, // Admin doesn't need to change password
+  moduleAccess: {
+    dashboard: true,
+    batches: true,
+    eggCollection: true,
+    feedManagement: true,
+    vaccination: true,
+    sales: true,
+    customers: true,
+    calendar: true,
+    reports: true,
+    userManagement: true,
+  }
+};
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   // State for Batches
@@ -106,9 +144,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [customers, setCustomers] = useState<Customer[]>(mockCustomers);
   const [orders, setOrders] = useState<Order[]>(mockOrders);
   
-  // State for User Management
-  const [users, setUsers] = useState<User[]>(mockUsers);
-  const [currentUser, setCurrentUser] = useState<User | null>(mockUsers[0] || null);
+  // State for User Management with admin user included
+  const [users, setUsers] = useState<User[]>([adminUser, ...updatedMockUsers]);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   // Functions for Batches
   const addBatch = (batch: Omit<Batch, 'id' | 'createdAt'>) => {
@@ -125,7 +163,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       batch.id === updatedBatch.id ? updatedBatch : batch
     ));
   };
-
+  
   // Functions for Egg Collections
   const addEggCollection = (collection: Omit<EggCollection, 'id'>) => {
     const newCollection: EggCollection = {
@@ -134,7 +172,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     };
     setEggCollections([...eggCollections, newCollection]);
   };
-
+  
   // Functions for Feed Management
   const addFeedType = (feedType: Omit<FeedType, 'id'>) => {
     const newFeedType: FeedType = {
@@ -169,7 +207,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     };
     setFeedConsumption([...feedConsumption, newConsumption]);
   };
-
+  
   // Functions for Vaccination Management
   const addVaccine = (vaccine: Omit<Vaccine, 'id'>) => {
     const newVaccine: Vaccine = {
@@ -186,7 +224,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     };
     setVaccinationRecords([...vaccinationRecords, newRecord]);
   };
-
+  
   // Functions for Sales Management
   const addProduct = (product: Omit<Product, 'id'>) => {
     const newProduct: Product = {
@@ -216,7 +254,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     };
     setSales([...sales, newSale]);
   };
-
+  
   // Functions for Customer Management
   const addCustomer = (customer: Omit<Customer, 'id'>) => {
     const newCustomer: Customer = {
@@ -265,6 +303,62 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (!currentUser) return false;
     return currentUser.moduleAccess[module];
   };
+  
+  // Authentication functions
+  const authenticateUser = (email: string, password: string): User | null => {
+    const user = users.find(u => u.email === email && u.password === password && u.active);
+    
+    if (user) {
+      // Update last login
+      const updatedUser = {
+        ...user,
+        lastLogin: new Date().toISOString().split('T')[0]
+      };
+      
+      setUsers(users.map(u => u.id === updatedUser.id ? updatedUser : u));
+      setCurrentUser(updatedUser);
+      
+      // Store user ID in localStorage
+      localStorage.setItem('currentUserId', updatedUser.id);
+      
+      return updatedUser;
+    }
+    
+    return null;
+  };
+  
+  const logoutUser = (): void => {
+    setCurrentUser(null);
+    localStorage.removeItem('currentUserId');
+  };
+  
+  const isInitialLogin = (userId: string): boolean => {
+    const user = users.find(u => u.id === userId);
+    return user ? !user.initialLoginComplete : false;
+  };
+  
+  const setInitialLoginComplete = (userId: string): void => {
+    setUsers(users.map(user => 
+      user.id === userId ? { ...user, initialLoginComplete: true } : user
+    ));
+  };
+  
+  const changeUserPassword = (userId: string, newPassword: string): void => {
+    setUsers(users.map(user => 
+      user.id === userId ? { ...user, password: newPassword } : user
+    ));
+  };
+  
+  // Try to restore user from localStorage on initial load
+  React.useEffect(() => {
+    const userId = localStorage.getItem('currentUserId');
+    if (userId) {
+      const user = users.find(u => u.id === userId);
+      if (user) {
+        setCurrentUser(user);
+      }
+    }
+  }, []);
 
   const value = {
     batches,
@@ -300,7 +394,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     updateUser,
     deleteUser,
     setCurrentUser,
-    hasAccess
+    hasAccess,
+    authenticateUser,
+    logoutUser,
+    isInitialLogin,
+    setInitialLoginComplete,
+    changeUserPassword
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

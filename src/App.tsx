@@ -16,6 +16,9 @@ import Customers from "./pages/Customers";
 import CalendarPage from "./pages/CalendarPage";
 import UserManagement from "./pages/UserManagement";
 import NotFound from "./pages/NotFound";
+import Login from "./pages/Login";
+import ChangePassword from "./pages/ChangePassword";
+import AuthGuard from "./components/AuthGuard";
 
 import { AppProvider } from "./context/AppContext";
 
@@ -30,76 +33,97 @@ const App = () => (
           <Toaster />
           <BrowserRouter>
             <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/change-password" element={<ChangePassword />} />
+              
               <Route
                 path="/"
                 element={
-                  <DashboardLayout>
-                    <Dashboard />
-                  </DashboardLayout>
+                  <AuthGuard>
+                    <DashboardLayout>
+                      <Dashboard />
+                    </DashboardLayout>
+                  </AuthGuard>
                 }
               />
               <Route
                 path="/batches"
                 element={
-                  <DashboardLayout>
-                    <Batches />
-                  </DashboardLayout>
+                  <AuthGuard>
+                    <DashboardLayout>
+                      <Batches />
+                    </DashboardLayout>
+                  </AuthGuard>
                 }
               />
               <Route
                 path="/egg-collection"
                 element={
-                  <DashboardLayout>
-                    <EggCollection />
-                  </DashboardLayout>
+                  <AuthGuard>
+                    <DashboardLayout>
+                      <EggCollection />
+                    </DashboardLayout>
+                  </AuthGuard>
                 }
               />
               <Route
                 path="/feed"
                 element={
-                  <DashboardLayout>
-                    <FeedManagement />
-                  </DashboardLayout>
+                  <AuthGuard>
+                    <DashboardLayout>
+                      <FeedManagement />
+                    </DashboardLayout>
+                  </AuthGuard>
                 }
               />
               <Route
                 path="/vaccination"
                 element={
-                  <DashboardLayout>
-                    <Vaccination />
-                  </DashboardLayout>
+                  <AuthGuard>
+                    <DashboardLayout>
+                      <Vaccination />
+                    </DashboardLayout>
+                  </AuthGuard>
                 }
               />
               <Route
                 path="/sales"
                 element={
-                  <DashboardLayout>
-                    <Sales />
-                  </DashboardLayout>
+                  <AuthGuard>
+                    <DashboardLayout>
+                      <Sales />
+                    </DashboardLayout>
+                  </AuthGuard>
                 }
               />
               <Route
                 path="/customers"
                 element={
-                  <DashboardLayout>
-                    <Customers />
-                  </DashboardLayout>
+                  <AuthGuard>
+                    <DashboardLayout>
+                      <Customers />
+                    </DashboardLayout>
+                  </AuthGuard>
                 }
               />
               <Route
                 path="/calendar"
                 element={
-                  <DashboardLayout>
-                    <CalendarPage />
-                  </DashboardLayout>
+                  <AuthGuard>
+                    <DashboardLayout>
+                      <CalendarPage />
+                    </DashboardLayout>
+                  </AuthGuard>
                 }
               />
               <Route
                 path="/users"
                 element={
-                  <DashboardLayout>
-                    <UserManagement />
-                  </DashboardLayout>
+                  <AuthGuard>
+                    <DashboardLayout>
+                      <UserManagement />
+                    </DashboardLayout>
+                  </AuthGuard>
                 }
               />
               <Route path="*" element={<NotFound />} />

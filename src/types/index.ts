@@ -149,4 +149,12 @@ export interface User {
   createdAt: string;
   lastLogin?: string;
   moduleAccess: ModuleAccess;
+  password: string;
+  initialLoginComplete?: boolean;
+}
+
+// Auth Types
+export interface AuthState {
+  isAuthenticated: boolean;
+  user: User | null;
 }
