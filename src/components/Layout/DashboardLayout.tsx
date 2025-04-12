@@ -26,6 +26,7 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { toast } from 'sonner';
+import UserMenu from '../Navigation/UserMenu';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -159,7 +160,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             >
               <Menu className="h-6 w-6" />
             </Button>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-4 ml-auto">
               {/* User selector - for demo purposes */}
               <div className="hidden md:block">
                 <Select
@@ -183,6 +184,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
               <span className="md:hidden px-4 py-2 text-sm font-medium text-gray-700">
                 {currentUser?.name || 'User'}
               </span>
+              
+              {/* Add UserMenu component here */}
+              <UserMenu />
             </div>
           </div>
         </div>
