@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import {
   Card,
@@ -14,31 +14,22 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Plus, ShoppingCart } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
 import { generateSalesReport } from '@/utils/reportGenerator';
 import ReportButton from '@/components/ReportButton';
 import ProductsList from '@/components/sales/ProductsList';
 import SalesList from '@/components/sales/SalesList';
-import SaleItemsList from '@/components/sales/SaleItemsList';
+import ProductForm from '@/components/sales/ProductForm';
+import BatchProductForm from '@/components/sales/BatchProductForm';
+import PriceUpdateForm from '@/components/sales/PriceUpdateForm';
+import SaleForm from '@/components/sales/SaleForm';
+import { formatCurrency } from '@/utils/currencyUtils';
 
 const Sales = () => {
   const {
@@ -368,7 +359,7 @@ const Sales = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{dailySales.count} sales</div>
-            <p className="text-xs text-muted-foreground">Total: ${dailySales.total.toFixed(2)}</p>
+            <p className="text-xs text-muted-foreground">Total: {formatCurrency(dailySales.total)}</p>
           </CardContent>
         </Card>
         <Card>
@@ -379,7 +370,7 @@ const Sales = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{monthlySales.count} sales</div>
-            <p className="text-xs text-muted-foreground">Total: ${monthlySales.total.toFixed(2)}</p>
+            <p className="text-xs text-muted-foreground">Total: {formatCurrency(monthlySales.total)}</p>
           </CardContent>
         </Card>
       </div>
@@ -414,65 +405,14 @@ const Sales = () => {
                     Add retired batches of birds to your product list for sale.
                   </DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="batch" className="text-right">
-                      Batch
-                    </Label>
-                    <Select onValueChange={handleBatchSelect}>
-                      <SelectTrigger className="col-span-3">
-                        <SelectValue placeholder="Select retired batch" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {retiredBatches.length > 0 ? (
-                          retiredBatches.map((batch) => (
-                            <SelectItem key={batch.id} value={batch.id}>
-                              {batch.name} ({batch.birdCount} birds)
-                            </SelectItem>
-                          ))
-                        ) : (
-                          <SelectItem value="none" disabled>No retired batches available</SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="batchProductName" className="text-right">
-                      Product Name
-                    </Label>
-                    <Input
-                      id="batchProductName"
-                      value={batchProductForm.name}
-                      readOnly
-                      className="col-span-3"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="batchProductPrice" className="text-right">
-                      Price ($)
-                    </Label>
-                    <Input
-                      id="batchProductPrice"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={batchProductForm.currentPrice}
-                      onChange={handleBatchProductPriceChange}
-                      className="col-span-3"
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsAddRetiredBatchDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button 
-                    onClick={handleAddBatchProduct}
-                    disabled={!batchProductForm.batchId || batchProductForm.currentPrice <= 0}
-                  >
-                    Add to Products
-                  </Button>
-                </DialogFooter>
+                <BatchProductForm
+                  batchProductForm={batchProductForm}
+                  retiredBatches={retiredBatches}
+                  onBatchSelect={handleBatchSelect}
+                  onPriceChange={handleBatchProductPriceChange}
+                  onSubmit={handleAddBatchProduct}
+                  onCancel={() => setIsAddRetiredBatchDialogOpen(false)}
+                />
               </DialogContent>
             </Dialog>
             
@@ -490,71 +430,14 @@ const Sales = () => {
                     Add a new product to your inventory.
                   </DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="name" className="text-right">
-                      Name
-                    </Label>
-                    <Input
-                      id="name"
-                      name="name"
-                      value={productForm.name}
-                      onChange={handleProductChange}
-                      className="col-span-3"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="type" className="text-right">
-                      Type
-                    </Label>
-                    <Select onValueChange={(value) => handleProductTypeChange(value as 'Egg' | 'Bird')}>
-                      <SelectTrigger className="col-span-3">
-                        <SelectValue placeholder="Select product type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Egg">Egg</SelectItem>
-                        <SelectItem value="Bird">Bird</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {productForm.type === 'Egg' && (
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="condition" className="text-right">
-                        Condition
-                      </Label>
-                      <Select onValueChange={(value) => handleProductConditionChange(value as 'Whole' | 'Broken' | 'NA')}>
-                        <SelectTrigger className="col-span-3">
-                          <SelectValue placeholder="Select condition" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Whole">Whole</SelectItem>
-                          <SelectItem value="Broken">Broken</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="currentPrice" className="text-right">
-                      Price ($)
-                    </Label>
-                    <Input
-                      id="currentPrice"
-                      name="currentPrice"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={productForm.currentPrice}
-                      onChange={handleProductChange}
-                      className="col-span-3"
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsProductDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handleAddProduct}>Save Product</Button>
-                </DialogFooter>
+                <ProductForm
+                  productForm={productForm}
+                  onInputChange={handleProductChange}
+                  onTypeChange={handleProductTypeChange}
+                  onConditionChange={handleProductConditionChange}
+                  onSubmit={handleAddProduct}
+                  onCancel={() => setIsProductDialogOpen(false)}
+                />
               </DialogContent>
             </Dialog>
           </div>
@@ -590,116 +473,20 @@ const Sales = () => {
                     Add a new sales transaction.
                   </DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="date" className="text-right">
-                      Date
-                    </Label>
-                    <Input
-                      id="date"
-                      name="date"
-                      type="date"
-                      value={saleForm.date}
-                      onChange={handleSaleFormChange}
-                      className="col-span-3"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="customerId" className="text-right">
-                      Customer
-                    </Label>
-                    <Select onValueChange={(value) => setSaleForm({...saleForm, customerId: value})}>
-                      <SelectTrigger className="col-span-3">
-                        <SelectValue placeholder="Select customer (optional)" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="walkin">Walk-in Customer</SelectItem>
-                        {customers.map((customer) => (
-                          <SelectItem key={customer.id} value={customer.id}>{customer.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="border rounded-md p-3">
-                    <h4 className="font-medium mb-2">Add Products to Sale</h4>
-                    <div className="flex items-end gap-2 mb-4">
-                      <div className="flex-grow">
-                        <Label htmlFor="productId" className="mb-1 block">
-                          Product
-                        </Label>
-                        <Select onValueChange={handleSelectSaleProduct}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select product" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {products.map((product) => (
-                              <SelectItem key={product.id} value={product.id}>
-                                {product.name} (${product.currentPrice.toFixed(2)})
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="w-24">
-                        <Label htmlFor="quantity" className="mb-1 block">
-                          Quantity
-                        </Label>
-                        <Input
-                          id="quantity"
-                          type="number"
-                          min="1"
-                          value={saleProduct.quantity}
-                          onChange={handleQuantityChange}
-                        />
-                      </div>
-                      <Button onClick={handleAddToSale}>
-                        Add
-                      </Button>
-                    </div>
-                    
-                    {saleForm.products.length > 0 ? (
-                      <div>
-                        <h4 className="font-medium mb-2">Sale Items</h4>
-                        <SaleItemsList
-                          items={saleForm.products}
-                          products={products}
-                          onRemove={removeProductFromSale}
-                        />
-                        <div className="flex justify-end mt-2">
-                          <Badge className="text-lg py-1 px-3">
-                            Total: ${saleForm.totalAmount.toFixed(2)}
-                          </Badge>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-center py-2 text-muted-foreground">
-                        No products added to this sale yet.
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="notes" className="text-right">
-                      Notes
-                    </Label>
-                    <Textarea
-                      id="notes"
-                      name="notes"
-                      value={saleForm.notes}
-                      onChange={handleSaleFormChange}
-                      className="col-span-3"
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsSaleDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handleSubmitSale} disabled={saleForm.products.length === 0}>
-                    Record Sale
-                  </Button>
-                </DialogFooter>
+                <SaleForm
+                  saleForm={saleForm}
+                  saleProduct={saleProduct}
+                  products={products}
+                  customers={customers}
+                  onSaleFormChange={handleSaleFormChange}
+                  onCustomerChange={(value) => setSaleForm({...saleForm, customerId: value})}
+                  onProductSelect={handleSelectSaleProduct}
+                  onQuantityChange={handleQuantityChange}
+                  onAddToSale={handleAddToSale}
+                  onRemoveProduct={removeProductFromSale}
+                  onSubmit={handleSubmitSale}
+                  onCancel={() => setIsSaleDialogOpen(false)}
+                />
               </DialogContent>
             </Dialog>
           </div>
@@ -729,28 +516,12 @@ const Sales = () => {
               Change the price for this product.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="newPrice" className="text-right">
-                New Price ($)
-              </Label>
-              <Input
-                id="newPrice"
-                type="number"
-                step="0.01"
-                min="0"
-                value={priceForm.newPrice}
-                onChange={(e) => setPriceForm({...priceForm, newPrice: parseFloat(e.target.value) || 0})}
-                className="col-span-3"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditPriceDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handlePriceUpdate}>Update Price</Button>
-          </DialogFooter>
+          <PriceUpdateForm
+            newPrice={priceForm.newPrice}
+            onPriceChange={(e) => setPriceForm({...priceForm, newPrice: parseFloat(e.target.value) || 0})}
+            onSubmit={handlePriceUpdate}
+            onCancel={() => setIsEditPriceDialogOpen(false)}
+          />
         </DialogContent>
       </Dialog>
     </div>

@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
 import { Product } from '@/types';
+import { formatCurrency } from '@/utils/currencyUtils';
 
 interface SaleItem {
   productId: string;
@@ -46,8 +47,8 @@ const SaleItemsList = ({ items, products, onRemove }: SaleItemsListProps) => {
           <TableRow key={item.productId}>
             <TableCell>{getProductName(item.productId)}</TableCell>
             <TableCell>{item.quantity}</TableCell>
-            <TableCell>${item.pricePerUnit.toFixed(2)}</TableCell>
-            <TableCell>${(item.quantity * item.pricePerUnit).toFixed(2)}</TableCell>
+            <TableCell>{formatCurrency(item.pricePerUnit)}</TableCell>
+            <TableCell>{formatCurrency(item.quantity * item.pricePerUnit)}</TableCell>
             <TableCell>
               <Button
                 variant="ghost"

@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Product } from '@/types';
 import { Tag } from 'lucide-react';
+import { formatCurrency } from '@/utils/currencyUtils';
 
 interface ProductsListProps {
   products: Product[];
@@ -42,7 +43,7 @@ const ProductsList = ({ products, onEditPrice }: ProductsListProps) => {
               <TableCell>
                 {product.condition === 'NA' ? '-' : product.condition}
               </TableCell>
-              <TableCell>${product.currentPrice.toFixed(2)}</TableCell>
+              <TableCell>{formatCurrency(product.currentPrice)}</TableCell>
               <TableCell>{product.priceUpdatedAt}</TableCell>
               <TableCell className="text-right">
                 <Button

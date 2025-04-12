@@ -9,6 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Sale, Product, Customer } from '@/types';
+import { formatCurrency } from '@/utils/currencyUtils';
 
 interface SalesListProps {
   sales: Sale[];
@@ -54,7 +55,7 @@ const SalesList = ({ sales, products, customers }: SalesListProps) => {
                   ))}
                 </div>
               </TableCell>
-              <TableCell>${sale.totalAmount.toFixed(2)}</TableCell>
+              <TableCell>{formatCurrency(sale.totalAmount)}</TableCell>
               <TableCell className="max-w-[200px] truncate">{sale.notes || '-'}</TableCell>
             </TableRow>
           ))

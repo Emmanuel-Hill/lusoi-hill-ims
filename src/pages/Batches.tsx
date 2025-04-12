@@ -10,39 +10,23 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from '@/components/ui/badge';
+import { TableCaption } from "@/components/ui/table";
 import { toast } from 'sonner';
-import { Plus, Info, Edit } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { generateBatchReport } from '@/utils/reportGenerator';
 import ReportButton from '@/components/ReportButton';
+import BatchForm from '@/components/batches/BatchForm';
+import BatchTable from '@/components/batches/BatchTable';
+import BatchDetails from '@/components/batches/BatchDetails';
+import { formatCurrency } from '@/utils/currencyUtils';
 
 const Batches = () => {
   const { batches, addBatch, updateBatch } = useAppContext();
@@ -174,7 +158,6 @@ const Batches = () => {
     }
   };
   
-  // Add report generation handler
   const handleGenerateReport = (format: 'excel' | 'pdf') => {
     try {
       generateBatchReport(batches, format);
@@ -208,64 +191,13 @@ const Batches = () => {
                   Enter details for the new batch of birds
                 </DialogDescription>
               </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="name" className="text-right">Name</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="birdCount" className="text-right">Bird Count</Label>
-                  <Input
-                    id="birdCount"
-                    name="birdCount"
-                    type="number"
-                    value={formData.birdCount}
-                    onChange={handleInputChange}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="status" className="text-right">Status</Label>
-                  <Select
-                    value={formData.batchStatus}
-                    onValueChange={(value) => handleStatusChange(value as 'New' | 'Laying' | 'Not Laying' | 'Retired')}
-                  >
-                    <SelectTrigger className="col-span-3">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="New">New</SelectItem>
-                      <SelectItem value="Laying">Laying</SelectItem>
-                      <SelectItem value="Not Laying">Not Laying</SelectItem>
-                      <SelectItem value="Retired">Retired</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="notes" className="text-right">Notes</Label>
-                  <Textarea
-                    id="notes"
-                    name="notes"
-                    value={formData.notes}
-                    onChange={handleInputChange}
-                    className="col-span-3"
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleSubmit}>
-                  Add Batch
-                </Button>
-              </DialogFooter>
+              <BatchForm 
+                formData={formData}
+                onInputChange={handleInputChange}
+                onStatusChange={handleStatusChange}
+                onSubmit={handleSubmit}
+                onCancel={() => setIsDialogOpen(false)}
+              />
             </DialogContent>
           </Dialog>
         </div>
@@ -277,41 +209,11 @@ const Batches = () => {
           <CardDescription>Manage your batches of birds</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Bird Count</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Created At</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {batches.map((batch) => (
-                <TableRow key={batch.id}>
-                  <TableCell className="font-medium">{batch.name}</TableCell>
-                  <TableCell>{batch.birdCount}</TableCell>
-                  <TableCell>
-                    <Badge className={getBadgeColor(batch.batchStatus)}>
-                      {batch.batchStatus}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{batch.createdAt}</TableCell>
-                  <TableCell className="text-right space-x-2">
-                    <Button variant="ghost" size="sm" onClick={() => handleEditBatch(batch)}>
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleViewDetails(batch)}>
-                      <Info className="h-4 w-4 mr-2" />
-                      View Details
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <BatchTable 
+            batches={batches} 
+            onEdit={handleEditBatch} 
+            onViewDetails={handleViewDetails} 
+          />
         </CardContent>
         <CardFooter>
           <TableCaption>
@@ -329,64 +231,14 @@ const Batches = () => {
               Update details for this batch
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-name" className="text-right">Name</Label>
-              <Input
-                id="edit-name"
-                name="name"
-                value={editFormData.name}
-                onChange={handleEditInputChange}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-birdCount" className="text-right">Bird Count</Label>
-              <Input
-                id="edit-birdCount"
-                name="birdCount"
-                type="number"
-                value={editFormData.birdCount}
-                onChange={handleEditInputChange}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-status" className="text-right">Status</Label>
-              <Select
-                value={editFormData.batchStatus}
-                onValueChange={(value) => handleEditStatusChange(value as 'New' | 'Laying' | 'Not Laying' | 'Retired')}
-              >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="New">New</SelectItem>
-                  <SelectItem value="Laying">Laying</SelectItem>
-                  <SelectItem value="Not Laying">Not Laying</SelectItem>
-                  <SelectItem value="Retired">Retired</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-notes" className="text-right">Notes</Label>
-              <Textarea
-                id="edit-notes"
-                name="notes"
-                value={editFormData.notes}
-                onChange={handleEditInputChange}
-                className="col-span-3"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleEditSubmit}>
-              Save Changes
-            </Button>
-          </DialogFooter>
+          <BatchForm 
+            formData={editFormData}
+            onInputChange={handleEditInputChange}
+            onStatusChange={handleEditStatusChange}
+            onSubmit={handleEditSubmit}
+            onCancel={() => setIsEditDialogOpen(false)}
+            submitButtonText="Save Changes"
+          />
         </DialogContent>
       </Dialog>
       
@@ -399,37 +251,11 @@ const Batches = () => {
               Details for the selected batch
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-start gap-4">
-              <Label htmlFor="name" className="text-right">Name</Label>
-              <div className="col-span-3">{selectedBatch?.name}</div>
-            </div>
-            <div className="grid grid-cols-4 items-start gap-4">
-              <Label htmlFor="birdCount" className="text-right">Bird Count</Label>
-              <div className="col-span-3">{selectedBatch?.birdCount}</div>
-            </div>
-            <div className="grid grid-cols-4 items-start gap-4">
-              <Label htmlFor="status" className="text-right">Status</Label>
-              <div className="col-span-3">
-                <Badge className={getBadgeColor(selectedBatch?.batchStatus)}>
-                  {selectedBatch?.batchStatus}
-                </Badge>
-              </div>
-            </div>
-            <div className="grid grid-cols-4 items-start gap-4">
-              <Label htmlFor="createdAt" className="text-right">Created At</Label>
-              <div className="col-span-3">{selectedBatch?.createdAt}</div>
-            </div>
-            <div className="grid grid-cols-4 items-start gap-4">
-              <Label htmlFor="notes" className="text-right">Notes</Label>
-              <div className="col-span-3">{selectedBatch?.notes || '-'}</div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsViewDetailsOpen(false)}>
-              Close
-            </Button>
-          </DialogFooter>
+          <BatchDetails 
+            batch={selectedBatch}
+            onClose={() => setIsViewDetailsOpen(false)}
+            getBadgeColor={getBadgeColor}
+          />
         </DialogContent>
       </Dialog>
     </div>
