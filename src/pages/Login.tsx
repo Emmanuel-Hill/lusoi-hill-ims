@@ -62,9 +62,9 @@ const Login = () => {
       <div className="w-full max-w-md px-4">
         <div className="flex justify-center mb-8">
           <img 
-            src="/logo.png" 
+            src="/lovable-uploads/9eebc39c-2e9e-45dd-a2f3-7edc6d9d8bec.png" 
             alt="Lusoi Hill Farm" 
-            className="h-16"
+            className="h-24"
           />
         </div>
         

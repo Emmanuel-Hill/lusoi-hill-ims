@@ -85,11 +85,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           <div className="flex items-center justify-between px-4 py-6">
             <Link to="/" className="flex items-center space-x-2">
               <img
-                src="/lovable-uploads/8e4f7677-da9e-4d55-ba63-b3aab359f60b.png"
+                src="/lovable-uploads/9eebc39c-2e9e-45dd-a2f3-7edc6d9d8bec.png"
                 alt="Lusoi Logo"
                 className="h-10 w-auto"
               />
-              <span className="text-2xl font-bold text-lusoi-500">Lusoi</span>
+              <span className="text-2xl font-bold text-green-700">Lusoi</span>
             </Link>
             <Button
               variant="ghost"
@@ -114,8 +114,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                   className={cn(
                     "group flex items-center px-2 py-2 text-sm font-medium rounded-md",
                     isActive
-                      ? "bg-lusoi-500 text-white"
-                      : "text-sidebar-foreground hover:bg-lusoi-100 hover:text-lusoi-700"
+                      ? "bg-green-700 text-white"
+                      : "text-sidebar-foreground hover:bg-green-100 hover:text-green-800"
                   )}
                 >
                   <item.icon
@@ -123,7 +123,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                       "mr-3 h-5 w-5",
                       isActive
                         ? "text-white"
-                        : "text-lusoi-500 group-hover:text-lusoi-700"
+                        : "text-green-700 group-hover:text-green-800"
                     )}
                   />
                   {item.name}
