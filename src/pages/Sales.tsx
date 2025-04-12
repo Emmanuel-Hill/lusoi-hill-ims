@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import {
   Card,
@@ -48,12 +48,14 @@ const Sales = () => {
     sales,
     addSale,
     customers,
+    batches
   } = useAppContext();
 
   // Product Dialog State
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
   const [isEditPriceDialogOpen, setIsEditPriceDialogOpen] = useState(false);
   const [isSaleDialogOpen, setIsSaleDialogOpen] = useState(false);
+  const [isAddRetiredBatchDialogOpen, setIsAddRetiredBatchDialogOpen] = useState(false);
   
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
   const [productForm, setProductForm] = useState({
@@ -62,6 +64,16 @@ const Sales = () => {
     condition: 'Whole' as 'Whole' | 'Broken' | 'NA',
     currentPrice: 0,
   });
+  
+  // Retired batch product form
+  const [batchProductForm, setBatchProductForm] = useState({
+    batchId: '',
+    name: '',
+    currentPrice: 0,
+  });
+  
+  // Get retired batches that can be sold
+  const retiredBatches = batches.filter(batch => batch.batchStatus === 'Retired');
   
   // Sales Form State
   const [saleForm, setSaleForm] = useState({
@@ -128,6 +140,53 @@ const Sales = () => {
     });
     setIsProductDialogOpen(false);
     toast.success('Product added successfully');
+  };
+  
+  // Handle retired batch selection to create product
+  const handleBatchSelect = (batchId: string) => {
+    const batch = batches.find(b => b.id === batchId);
+    if (batch) {
+      setBatchProductForm({
+        batchId: batch.id,
+        name: `${batch.name} (ExLayer Birds)`,
+        currentPrice: 0,
+      });
+    }
+  };
+  
+  // Handle batch product price change
+  const handleBatchProductPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setBatchProductForm({
+      ...batchProductForm,
+      currentPrice: parseFloat(e.target.value) || 0,
+    });
+  };
+  
+  // Add batch product to product list
+  const handleAddBatchProduct = () => {
+    if (!batchProductForm.batchId || batchProductForm.currentPrice <= 0) {
+      toast.error('Please select a batch and enter a valid price');
+      return;
+    }
+    
+    // Create a new product from the batch
+    addProduct({
+      name: batchProductForm.name,
+      type: 'Bird',
+      condition: 'NA',
+      currentPrice: batchProductForm.currentPrice,
+      priceUpdatedAt: new Date().toISOString().split('T')[0]
+    });
+    
+    // Reset form
+    setBatchProductForm({
+      batchId: '',
+      name: '',
+      currentPrice: 0,
+    });
+    
+    setIsAddRetiredBatchDialogOpen(false);
+    toast.success('ExLayer birds added to products successfully');
   };
 
   const handleEditPriceClick = (product: any) => {
@@ -340,7 +399,83 @@ const Sales = () => {
         
         {/* Products Tab */}
         <TabsContent value="products" className="space-y-4">
-          <div className="flex justify-end">
+          <div className="flex justify-end space-x-2">
+            <Dialog open={isAddRetiredBatchDialogOpen} onOpenChange={setIsAddRetiredBatchDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add ExLayer Birds
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Add ExLayer Birds as Product</DialogTitle>
+                  <DialogDescription>
+                    Add retired batches of birds to your product list for sale.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="batch" className="text-right">
+                      Batch
+                    </Label>
+                    <Select onValueChange={handleBatchSelect}>
+                      <SelectTrigger className="col-span-3">
+                        <SelectValue placeholder="Select retired batch" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {retiredBatches.length > 0 ? (
+                          retiredBatches.map((batch) => (
+                            <SelectItem key={batch.id} value={batch.id}>
+                              {batch.name} ({batch.birdCount} birds)
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="none" disabled>No retired batches available</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="batchProductName" className="text-right">
+                      Product Name
+                    </Label>
+                    <Input
+                      id="batchProductName"
+                      value={batchProductForm.name}
+                      readOnly
+                      className="col-span-3"
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="batchProductPrice" className="text-right">
+                      Price ($)
+                    </Label>
+                    <Input
+                      id="batchProductPrice"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={batchProductForm.currentPrice}
+                      onChange={handleBatchProductPriceChange}
+                      className="col-span-3"
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsAddRetiredBatchDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleAddBatchProduct}
+                    disabled={!batchProductForm.batchId || batchProductForm.currentPrice <= 0}
+                  >
+                    Add to Products
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+            
             <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
               <DialogTrigger asChild>
                 <Button>

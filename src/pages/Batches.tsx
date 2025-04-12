@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import {
@@ -39,13 +40,14 @@ import {
 } from "@/components/ui/table";
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Plus, Info } from 'lucide-react';
+import { Plus, Info, Edit } from 'lucide-react';
 import { generateBatchReport } from '@/utils/reportGenerator';
 import ReportButton from '@/components/ReportButton';
 
 const Batches = () => {
-  const { batches, addBatch } = useAppContext();
+  const { batches, addBatch, updateBatch } = useAppContext();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isViewDetailsOpen, setIsViewDetailsOpen] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState<any>(null);
   
@@ -57,6 +59,15 @@ const Batches = () => {
     notes: ''
   });
   
+  const [editFormData, setEditFormData] = useState({
+    id: '',
+    name: '',
+    birdCount: 0,
+    batchStatus: 'New' as 'New' | 'Laying' | 'Not Laying' | 'Retired',
+    createdAt: '',
+    notes: ''
+  });
+  
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData({
@@ -65,9 +76,24 @@ const Batches = () => {
     });
   };
   
+  const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setEditFormData({
+      ...editFormData,
+      [name]: name === 'birdCount' ? parseInt(value) : value
+    });
+  };
+  
   const handleStatusChange = (value: 'New' | 'Laying' | 'Not Laying' | 'Retired') => {
     setFormData({
       ...formData,
+      batchStatus: value
+    });
+  };
+  
+  const handleEditStatusChange = (value: 'New' | 'Laying' | 'Not Laying' | 'Retired') => {
+    setEditFormData({
+      ...editFormData,
       batchStatus: value
     });
   };
@@ -97,6 +123,37 @@ const Batches = () => {
     toast.success('Batch added successfully');
   };
   
+  const handleEditSubmit = () => {
+    if (!editFormData.name || editFormData.birdCount <= 0) {
+      toast.error('Please provide a name and a valid bird count');
+      return;
+    }
+    
+    updateBatch({
+      id: editFormData.id,
+      name: editFormData.name,
+      birdCount: editFormData.birdCount,
+      batchStatus: editFormData.batchStatus,
+      createdAt: editFormData.createdAt,
+      notes: editFormData.notes,
+    });
+    
+    setIsEditDialogOpen(false);
+    toast.success('Batch updated successfully');
+  };
+  
+  const handleEditBatch = (batch: any) => {
+    setEditFormData({
+      id: batch.id,
+      name: batch.name,
+      birdCount: batch.birdCount,
+      batchStatus: batch.batchStatus,
+      createdAt: batch.createdAt,
+      notes: batch.notes || '',
+    });
+    setIsEditDialogOpen(true);
+  };
+  
   const handleViewDetails = (batch: any) => {
     setSelectedBatch(batch);
     setIsViewDetailsOpen(true);
@@ -111,7 +168,7 @@ const Batches = () => {
       case 'Not Laying':
         return 'bg-yellow-100 text-yellow-800';
       case 'Retired':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -241,7 +298,11 @@ const Batches = () => {
                     </Badge>
                   </TableCell>
                   <TableCell>{batch.createdAt}</TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right space-x-2">
+                    <Button variant="ghost" size="sm" onClick={() => handleEditBatch(batch)}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
                     <Button variant="ghost" size="sm" onClick={() => handleViewDetails(batch)}>
                       <Info className="h-4 w-4 mr-2" />
                       View Details
@@ -258,6 +319,76 @@ const Batches = () => {
           </TableCaption>
         </CardFooter>
       </Card>
+      
+      {/* Edit Batch Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Edit Batch</DialogTitle>
+            <DialogDescription>
+              Update details for this batch
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-name" className="text-right">Name</Label>
+              <Input
+                id="edit-name"
+                name="name"
+                value={editFormData.name}
+                onChange={handleEditInputChange}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-birdCount" className="text-right">Bird Count</Label>
+              <Input
+                id="edit-birdCount"
+                name="birdCount"
+                type="number"
+                value={editFormData.birdCount}
+                onChange={handleEditInputChange}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-status" className="text-right">Status</Label>
+              <Select
+                value={editFormData.batchStatus}
+                onValueChange={(value) => handleEditStatusChange(value as 'New' | 'Laying' | 'Not Laying' | 'Retired')}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="New">New</SelectItem>
+                  <SelectItem value="Laying">Laying</SelectItem>
+                  <SelectItem value="Not Laying">Not Laying</SelectItem>
+                  <SelectItem value="Retired">Retired</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-notes" className="text-right">Notes</Label>
+              <Textarea
+                id="edit-notes"
+                name="notes"
+                value={editFormData.notes}
+                onChange={handleEditInputChange}
+                className="col-span-3"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleEditSubmit}>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
       {/* Batch Details Dialog */}
       <Dialog open={isViewDetailsOpen} onOpenChange={setIsViewDetailsOpen}>
