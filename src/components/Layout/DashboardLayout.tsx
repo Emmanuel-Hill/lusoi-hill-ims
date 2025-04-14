@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation, Navigate } from 'react-router-dom';
 import { 
@@ -13,7 +12,8 @@ import {
   Syringe,
   Calendar,
   ShoppingCart,
-  UserCog
+  UserCog,
+  Package
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -47,7 +47,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     { name: 'Sales', href: '/sales', icon: ShoppingCart, access: 'sales' },
     { name: 'Customers', href: '/customers', icon: FileText, access: 'customers' },
     { name: 'Calendar', href: '/calendar', icon: Calendar, access: 'calendar' },
-    { name: 'Reports', href: '/reports', icon: BarChartHorizontal, access: 'reports' },
+    { name: 'Warehouse', href: '/warehouse', icon: Package, access: 'warehouse' },
     { name: 'User Management', href: '/users', icon: UserCog, access: 'userManagement' }
   ];
   

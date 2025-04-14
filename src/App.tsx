@@ -14,6 +14,7 @@ import Vaccination from "./pages/Vaccination";
 import Sales from "./pages/Sales";
 import Customers from "./pages/Customers";
 import CalendarPage from "./pages/CalendarPage";
+import Warehouse from "./pages/Warehouse";
 import UserManagement from "./pages/UserManagement";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
@@ -112,6 +113,16 @@ const App = () => (
                   <AuthGuard>
                     <DashboardLayout>
                       <CalendarPage />
+                    </DashboardLayout>
+                  </AuthGuard>
+                }
+              />
+              <Route
+                path="/warehouse"
+                element={
+                  <AuthGuard>
+                    <DashboardLayout>
+                      <Warehouse />
                     </DashboardLayout>
                   </AuthGuard>
                 }
