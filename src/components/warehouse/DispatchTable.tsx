@@ -8,35 +8,92 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { ClipboardList } from 'lucide-react';
+import { ClipboardList, PlusCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
-const DispatchTable: React.FC = () => {
+interface DispatchRecord {
+  id: string;
+  date: string;
+  reference: string;
+  items: number;
+  destination: string;
+  dispatchedBy: string;
+}
+
+interface DispatchTableProps {
+  records?: DispatchRecord[];
+  onAddRecord?: () => void;
+  onViewRecord?: (id: string) => void;
+}
+
+const DispatchTable: React.FC<DispatchTableProps> = ({ 
+  records = [],
+  onAddRecord,
+  onViewRecord 
+}) => {
+  const isEmpty = records.length === 0;
+
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Date</TableHead>
-          <TableHead>Reference</TableHead>
-          <TableHead>Items</TableHead>
-          <TableHead>Destination</TableHead>
-          <TableHead>Dispatched By</TableHead>
-          <TableHead className="text-right">Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        <TableRow>
-          <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
-            <div className="flex flex-col items-center justify-center">
-              <ClipboardList className="h-12 w-12 text-muted-foreground/40 mb-3" />
-              <h3 className="font-medium text-lg mb-1">No dispatch records</h3>
-              <p className="text-sm text-muted-foreground">
-                Record items dispatched from the warehouse
-              </p>
-            </div>
-          </TableCell>
-        </TableRow>
-      </TableBody>
-    </Table>
+    <div>
+      {!isEmpty && (
+        <div className="flex justify-end mb-4">
+          <Button onClick={onAddRecord}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Record Dispatched Items
+          </Button>
+        </div>
+      )}
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Date</TableHead>
+            <TableHead>Reference</TableHead>
+            <TableHead>Items</TableHead>
+            <TableHead>Destination</TableHead>
+            <TableHead>Dispatched By</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {isEmpty ? (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
+                <div className="flex flex-col items-center justify-center">
+                  <ClipboardList className="h-12 w-12 text-muted-foreground/40 mb-3" />
+                  <h3 className="font-medium text-lg mb-1">No dispatch records</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Record items dispatched from the warehouse
+                  </p>
+                  <Button onClick={onAddRecord}>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Record Dispatched Items
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ) : (
+            records.map((record) => (
+              <TableRow key={record.id}>
+                <TableCell>{record.date}</TableCell>
+                <TableCell>{record.reference}</TableCell>
+                <TableCell>{record.items}</TableCell>
+                <TableCell>{record.destination}</TableCell>
+                <TableCell>{record.dispatchedBy}</TableCell>
+                <TableCell className="text-right">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => onViewRecord?.(record.id)}
+                  >
+                    View
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </div>
   );
 };
 

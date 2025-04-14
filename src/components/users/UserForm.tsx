@@ -1,30 +1,31 @@
 
 import React from 'react';
+import {
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Button } from '@/components/ui/button';
-import { 
-  DialogFooter, 
-  DialogContent, 
-  DialogDescription, 
-  DialogHeader, 
-  DialogTitle 
-} from '@/components/ui/dialog';
-import { User, UserRole, ModuleAccess } from '@/types';
+import { Switch } from '@/components/ui/switch';
+import { UserRole, ModuleAccess } from '@/types';
+import { allModules } from '@/context/ModuleAccessContext';
 
+// Define the component props
 interface UserFormProps {
-  user: User | Partial<User & { moduleAccess: ModuleAccess }>;
+  user: {
+    name: string;
+    email: string;
+    password?: string;
+    role: UserRole;
+    active: boolean;
+    moduleAccess: ModuleAccess;
+  };
   onSubmit: () => void;
   onCancel: () => void;
-  isNew?: boolean;
+  isNew: boolean;
   applyRoleTemplate: (role: UserRole) => void;
   handleNameChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleEmailChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -37,128 +38,148 @@ const UserForm: React.FC<UserFormProps> = ({
   user,
   onSubmit,
   onCancel,
-  isNew = false,
+  isNew,
   applyRoleTemplate,
   handleNameChange,
   handleEmailChange,
   handleTempPasswordChange,
   toggleModuleAccess,
-  setUserActive
+  setUserActive,
 }) => {
-  const formTitle = isNew ? 'Add New User' : 'Edit User';
-  const formDescription = isNew 
-    ? 'Create a new user account and assign permissions' 
-    : 'Update user details and permissions';
-  const submitButtonText = isNew ? 'Add User' : 'Save Changes';
-  
+  // Available user roles
+  const userRoles: UserRole[] = [
+    'Admin',
+    'OperationsManager',
+    'Owner',
+    'ProductionManager',
+    'SalesManager',
+    'SalesTeamMember',
+    'Driver',
+    'WarehouseManager',
+    'ITSpecialist',
+  ];
+
   return (
-    <DialogContent className="max-w-3xl">
+    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
       <DialogHeader>
-        <DialogTitle>{formTitle}</DialogTitle>
-        <DialogDescription>{formDescription}</DialogDescription>
+        <DialogTitle>{isNew ? 'Add New User' : 'Edit User'}</DialogTitle>
+        <DialogDescription>
+          {isNew
+            ? 'Create a new user account and set their access permissions.'
+            : 'Update user details and access permissions.'}
+        </DialogDescription>
       </DialogHeader>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor={isNew ? "name" : "edit-name"}>Name</Label>
-            <Input 
-              id={isNew ? "name" : "edit-name"}
-              placeholder="Enter user name" 
-              value={user.name || ''}
-              onChange={handleNameChange}
-            />
+
+      <div className="grid gap-4 py-4">
+        {/* User Details */}
+        <div className="grid gap-2">
+          <h3 className="text-sm font-medium">User Details</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Name</Label>
+              <Input
+                id="name"
+                value={user.name}
+                onChange={handleNameChange}
+                placeholder="User's full name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={user.email}
+                onChange={handleEmailChange}
+                placeholder="user@example.com"
+              />
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor={isNew ? "email" : "edit-email"}>Email</Label>
-            <Input 
-              id={isNew ? "email" : "edit-email"}
-              type="email" 
-              placeholder="Email will be auto-generated" 
-              value={user.email || ''}
-              onChange={handleEmailChange}
-            />
-            <p className="text-xs text-muted-foreground">
-              Email will be auto-generated using the domain lusoihillfarm.co.ke
-              {!isNew && ' when name is changed'}
-            </p>
-          </div>
+
           {isNew && (
             <div className="space-y-2">
               <Label htmlFor="temp-password">Temporary Password</Label>
-              <Input 
+              <Input
                 id="temp-password"
-                type="password"
-                placeholder="Set a temporary password" 
-                value={user.password || ''}
+                type="text"
+                value={user.password}
                 onChange={handleTempPasswordChange}
+                placeholder="Temporary password for initial login"
               />
               <p className="text-xs text-muted-foreground">
-                User will be prompted to change this password on first login
+                User will be prompted to change password on first login.
               </p>
             </div>
           )}
-          <div className="space-y-2">
-            <Label htmlFor={isNew ? "role" : "edit-role"}>Role</Label>
-            <Select 
-              value={user.role} 
-              onValueChange={(value: UserRole) => {
-                applyRoleTemplate(value);
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Admin">Admin</SelectItem>
-                <SelectItem value="ProductionManager">Production Manager</SelectItem>
-                <SelectItem value="OperationsManager">Operations Manager</SelectItem>
-                <SelectItem value="Owner">Owner</SelectItem>
-                <SelectItem value="ITSpecialist">IT Specialist</SelectItem>
-                <SelectItem value="SalesManager">Sales Manager</SelectItem>
-                <SelectItem value="SalesTeamMember">Sales Team Member</SelectItem>
-                <SelectItem value="Driver">Driver</SelectItem>
-                <SelectItem value="WarehouseManager">Warehouse Manager</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center space-x-2 pt-2">
-            <Checkbox 
-              id={isNew ? "active" : "edit-active"}
-              checked={user.active}
-              onCheckedChange={(checked) => setUserActive(checked as boolean)}
-            />
-            <Label htmlFor={isNew ? "active" : "edit-active"} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              Active Account
-            </Label>
-          </div>
         </div>
-        
-        <div className="border rounded-lg p-3">
-          <h3 className="text-sm font-semibold mb-3">Module Access</h3>
-          <div className="space-y-2">
-            {user.moduleAccess && Object.keys(user.moduleAccess).map((module) => (
-              <div key={module} className="flex items-center space-x-2">
-                <Checkbox 
-                  id={`${isNew ? '' : 'edit-'}module-${module}`}
-                  checked={user.moduleAccess[module as keyof ModuleAccess]}
-                  onCheckedChange={(checked) => 
-                    toggleModuleAccess(module as keyof ModuleAccess, checked as boolean)
+
+        {/* Role Selection */}
+        <div className="grid gap-2">
+          <h3 className="text-sm font-medium">Role</h3>
+          <div className="grid grid-cols-3 gap-2">
+            {userRoles.map((role) => (
+              <Button
+                key={role}
+                type="button"
+                variant={user.role === role ? 'default' : 'outline'}
+                className="justify-start text-left"
+                onClick={() => applyRoleTemplate(role)}
+              >
+                {role.replace(/([A-Z])/g, ' $1').trim()}
+              </Button>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Selecting a role will apply its default permissions, which you can customize below.
+          </p>
+        </div>
+
+        {/* Module Access */}
+        <div className="grid gap-2">
+          <h3 className="text-sm font-medium">Module Access</h3>
+          <div className="space-y-4">
+            {allModules.map((module) => (
+              <div key={module.key} className="flex items-center justify-between">
+                <Label htmlFor={`module-${module.key}`} className="flex-1">
+                  {module.label}
+                </Label>
+                <Switch
+                  id={`module-${module.key}`}
+                  checked={user.moduleAccess[module.key]}
+                  onCheckedChange={(checked) =>
+                    toggleModuleAccess(module.key, checked)
                   }
                 />
-                <Label htmlFor={`${isNew ? '' : 'edit-'}module-${module}`} className="text-sm capitalize">
-                  {module === 'eggCollection' ? 'Egg Collection' : 
-                    module === 'feedManagement' ? 'Feed Management' : 
-                    module === 'userManagement' ? 'User Management' : module}
-                </Label>
               </div>
             ))}
           </div>
         </div>
+
+        {/* User Status */}
+        <div className="grid gap-2">
+          <h3 className="text-sm font-medium">Status</h3>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="user-active"
+              checked={user.active}
+              onCheckedChange={setUserActive}
+            />
+            <Label htmlFor="user-active">User is active</Label>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Inactive users cannot log into the system.
+          </p>
+        </div>
       </div>
-      <DialogFooter>
-        <Button variant="outline" onClick={onCancel}>Cancel</Button>
-        <Button onClick={onSubmit}>{submitButtonText}</Button>
-      </DialogFooter>
+
+      <div className="flex justify-end gap-2">
+        <Button variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button onClick={onSubmit}>
+          {isNew ? 'Create User' : 'Update User'}
+        </Button>
+      </div>
     </DialogContent>
   );
 };
