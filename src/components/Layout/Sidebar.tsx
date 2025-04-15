@@ -17,6 +17,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAppContext } from '@/context/AppContext';
+import { useModuleAccess } from '@/context/ModuleAccessContext';
 
 interface SidebarProps {
   isSidebarOpen: boolean;
@@ -25,7 +26,7 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ isSidebarOpen, setIsSidebarOpen }) => {
   const location = useLocation();
-  const { hasAccess } = useAppContext();
+  const { hasAccess } = useModuleAccess();
   
   // Navigation items with access control
   const navigation = [
@@ -72,7 +73,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isSidebarOpen, setIsSidebarOpen }) =>
           {navigation.map((item) => {
             const isActive = location.pathname === item.href;
             // Only show menu items the user has access to
-            if (!hasAccess(item.access as any)) return null;
+            if (!hasAccess(item.access as keyof ModuleAccess)) return null;
             
             return (
               <Link

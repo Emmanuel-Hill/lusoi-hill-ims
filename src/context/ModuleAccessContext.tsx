@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext } from 'react';
-import { ModuleAccess } from '@/types';
+import { ModuleAccess } from '@/types/moduleAccess';
 import { useAppContext } from './AppContext';
 
 // Create a context for module access

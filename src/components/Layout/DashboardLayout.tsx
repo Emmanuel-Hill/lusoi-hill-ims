@@ -2,10 +2,11 @@
 import React, { useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { useAppContext } from '@/context/AppContext';
+import { useModuleAccess } from '@/context/ModuleAccessContext';
 import { toast } from 'sonner';
 import Sidebar from './Sidebar';
 import Header from './Header';
+import { ModuleAccess } from '@/types/moduleAccess';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -14,32 +15,32 @@ interface DashboardLayoutProps {
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const location = useLocation();
-  const { hasAccess } = useAppContext();
+  const { hasAccess, allModules } = useModuleAccess();
   
-  // Navigation items with access control
-  const navigation = [
-    { name: 'Dashboard', href: '/', icon: 'LayoutDashboard', access: 'dashboard' },
-    { name: 'Batches', href: '/batches', icon: 'Users', access: 'batches' },
-    { name: 'Egg Collection', href: '/egg-collection', icon: 'Egg', access: 'eggCollection' },
-    { name: 'Feed Management', href: '/feed', icon: 'Utensils', access: 'feedManagement' },
-    { name: 'Vaccination', href: '/vaccination', icon: 'Syringe', access: 'vaccination' },
-    { name: 'Sales', href: '/sales', icon: 'ShoppingCart', access: 'sales' },
-    { name: 'Customers', href: '/customers', icon: 'FileText', access: 'customers' },
-    { name: 'Calendar', href: '/calendar', icon: 'Calendar', access: 'calendar' },
-    { name: 'Warehouse', href: '/warehouse', icon: 'Package', access: 'warehouse' },
-    { name: 'User Management', href: '/users', icon: 'UserCog', access: 'userManagement' }
-  ];
+  // Map routes to module access keys
+  const routeToModule: Record<string, keyof ModuleAccess> = {
+    '/': 'dashboard',
+    '/batches': 'batches',
+    '/egg-collection': 'eggCollection',
+    '/feed': 'feedManagement',
+    '/vaccination': 'vaccination',
+    '/sales': 'sales',
+    '/customers': 'customers',
+    '/calendar': 'calendar',
+    '/warehouse': 'warehouse',
+    '/users': 'userManagement',
+  };
   
   // Check if user has access to current route
   const currentPath = location.pathname;
-  const currentNavItem = navigation.find(item => 
-    currentPath === item.href || 
-    (currentPath !== '/' && item.href !== '/' && currentPath.startsWith(item.href))
+  const currentModule = Object.entries(routeToModule).find(([route]) => 
+    currentPath === route || 
+    (currentPath !== '/' && route !== '/' && currentPath.startsWith(route))
   );
   
   // If accessing a restricted page, redirect to dashboard
-  if (currentNavItem && !hasAccess(currentNavItem.access as any)) {
-    toast.error(`You don't have access to ${currentNavItem.name}`);
+  if (currentModule && !hasAccess(currentModule[1])) {
+    toast.error(`You don't have access to ${currentModule[1]}`);
     return <Navigate to="/" replace />;
   }
 
