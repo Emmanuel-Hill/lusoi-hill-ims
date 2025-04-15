@@ -11,7 +11,8 @@ import {
 import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { User, UserRole, ModuleAccess } from '@/types';
+import { User, UserRole } from '@/types';
+import { ModuleAccess } from '@/types/moduleAccess';
 import { PlusCircle } from 'lucide-react';
 
 // Import the refactored components
@@ -43,7 +44,8 @@ const UserManagement = () => {
       customers: false,
       calendar: false,
       reports: false,
-      userManagement: false
+      userManagement: false,
+      warehouse: false
     } as ModuleAccess
   });
   
@@ -114,7 +116,8 @@ const UserManagement = () => {
       customers: false,
       calendar: false,
       reports: false,
-      userManagement: false
+      userManagement: false,
+      warehouse: false
     };
     
     switch(role) {
@@ -243,7 +246,8 @@ const UserManagement = () => {
         customers: false,
         calendar: false,
         reports: false,
-        userManagement: false
+        userManagement: false,
+        warehouse: false
       }
     });
   };

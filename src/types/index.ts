@@ -1,4 +1,3 @@
-
 // Types for Batch Management
 export interface Batch {
   id: string;
@@ -127,18 +126,9 @@ export type UserRole =
   | 'Driver'          // Access to delivery-related modules
   | 'WarehouseManager'; // Access to inventory and tracking modules
 
-export interface ModuleAccess {
-  dashboard: boolean;
-  batches: boolean;
-  eggCollection: boolean;
-  feedManagement: boolean;
-  vaccination: boolean;
-  sales: boolean;
-  customers: boolean;
-  calendar: boolean;
-  reports: boolean;
-  userManagement: boolean;
-}
+// Import the ModuleAccess interface from moduleAccess.ts to avoid duplication
+import { ModuleAccess } from './moduleAccess';
+export { ModuleAccess };
 
 export interface User {
   id: string;
