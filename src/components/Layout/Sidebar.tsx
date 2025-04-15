@@ -16,8 +16,8 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useAppContext } from '@/context/AppContext';
 import { useModuleAccess } from '@/context/ModuleAccessContext';
+import { ModuleAccess } from '@/types/moduleAccess';
 
 interface SidebarProps {
   isSidebarOpen: boolean;
@@ -30,16 +30,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isSidebarOpen, setIsSidebarOpen }) =>
   
   // Navigation items with access control
   const navigation = [
-    { name: 'Dashboard', href: '/', icon: LayoutDashboard, access: 'dashboard' },
-    { name: 'Batches', href: '/batches', icon: Users, access: 'batches' },
-    { name: 'Egg Collection', href: '/egg-collection', icon: Egg, access: 'eggCollection' },
-    { name: 'Feed Management', href: '/feed', icon: Utensils, access: 'feedManagement' },
-    { name: 'Vaccination', href: '/vaccination', icon: Syringe, access: 'vaccination' },
-    { name: 'Sales', href: '/sales', icon: ShoppingCart, access: 'sales' },
-    { name: 'Customers', href: '/customers', icon: FileText, access: 'customers' },
-    { name: 'Calendar', href: '/calendar', icon: Calendar, access: 'calendar' },
-    { name: 'Warehouse', href: '/warehouse', icon: Package, access: 'warehouse' },
-    { name: 'User Management', href: '/users', icon: UserCog, access: 'userManagement' }
+    { name: 'Dashboard', href: '/', icon: LayoutDashboard, access: 'dashboard' as keyof ModuleAccess },
+    { name: 'Batches', href: '/batches', icon: Users, access: 'batches' as keyof ModuleAccess },
+    { name: 'Egg Collection', href: '/egg-collection', icon: Egg, access: 'eggCollection' as keyof ModuleAccess },
+    { name: 'Feed Management', href: '/feed', icon: Utensils, access: 'feedManagement' as keyof ModuleAccess },
+    { name: 'Vaccination', href: '/vaccination', icon: Syringe, access: 'vaccination' as keyof ModuleAccess },
+    { name: 'Sales', href: '/sales', icon: ShoppingCart, access: 'sales' as keyof ModuleAccess },
+    { name: 'Customers', href: '/customers', icon: FileText, access: 'customers' as keyof ModuleAccess },
+    { name: 'Calendar', href: '/calendar', icon: Calendar, access: 'calendar' as keyof ModuleAccess },
+    { name: 'Warehouse', href: '/warehouse', icon: Package, access: 'warehouse' as keyof ModuleAccess },
+    { name: 'User Management', href: '/users', icon: UserCog, access: 'userManagement' as keyof ModuleAccess }
   ];
   
   return (
@@ -73,7 +73,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isSidebarOpen, setIsSidebarOpen }) =>
           {navigation.map((item) => {
             const isActive = location.pathname === item.href;
             // Only show menu items the user has access to
-            if (!hasAccess(item.access as keyof ModuleAccess)) return null;
+            if (!hasAccess(item.access)) return null;
             
             return (
               <Link

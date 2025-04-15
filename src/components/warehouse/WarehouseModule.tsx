@@ -1,11 +1,22 @@
 
 import React from 'react';
-import { ModuleAccess } from '@/types';
+import { useModuleAccess } from '@/context/ModuleAccessContext';
+import { ModuleAccess } from '@/types/moduleAccess';
 
-// This defines the warehouse module access in the system
-export const WAREHOUSE_MODULE_KEY: keyof ModuleAccess = 'warehouse';
+export const WarehouseModule: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { hasAccess } = useModuleAccess();
+  const moduleKey: keyof ModuleAccess = 'warehouse';
 
-// This component is just for organization and doesn't render anything
-const WarehouseModule: React.FC = () => null;
+  if (!hasAccess(moduleKey)) {
+    return (
+      <div className="p-4 bg-red-50 border border-red-200 rounded-md">
+        <h3 className="text-lg font-medium text-red-800">Access Denied</h3>
+        <p className="text-red-600">
+          You do not have permission to access the Warehouse module.
+        </p>
+      </div>
+    );
+  }
 
-export default WarehouseModule;
+  return <>{children}</>;
+};
