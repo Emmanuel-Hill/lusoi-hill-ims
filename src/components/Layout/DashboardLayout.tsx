@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -7,6 +6,7 @@ import { toast } from 'sonner';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import { ModuleAccess } from '@/types/moduleAccess';
+import DarkModeToggle from "@/components/ui/DarkModeToggle";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -58,10 +58,15 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         isSidebarOpen ? "md:ml-64" : "ml-0"
       )}>
         {/* Top navigation */}
-        <Header 
-          isSidebarOpen={isSidebarOpen} 
-          setIsSidebarOpen={setIsSidebarOpen} 
-        />
+        <div className="relative">
+          <Header 
+            isSidebarOpen={isSidebarOpen} 
+            setIsSidebarOpen={setIsSidebarOpen} 
+          />
+          <div className="absolute top-4 right-6 z-10">
+            <DarkModeToggle />
+          </div>
+        </div>
 
         {/* Main content */}
         <main className="p-6">
