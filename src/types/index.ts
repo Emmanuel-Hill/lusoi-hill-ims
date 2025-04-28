@@ -128,7 +128,7 @@ export type UserRole =
 
 // Import the ModuleAccess interface from moduleAccess.ts to avoid duplication
 import { ModuleAccess } from './moduleAccess';
-export { ModuleAccess };
+export type { ModuleAccess } from './moduleAccess';
 
 export interface User {
   id: string;
