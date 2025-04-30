@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import {
@@ -15,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -55,7 +57,10 @@ const EggCollectionPage = () => {
     const { name, value } = e.target;
     setForm({
       ...form,
-      [name]: value,
+      [name]: name === 'goodEggs' || name === 'brokenEggs' || name === 'smallEggs' || 
+               name === 'mediumEggs' || name === 'largeEggs' || name === 'xlEggs' 
+              ? parseInt(value) || 0 
+              : value,
     });
   };
 
@@ -88,10 +93,17 @@ const EggCollectionPage = () => {
       return;
     }
 
+    // Calculate whole and broken counts for EggCollection type compatibility
+    const wholeCount = form.goodEggs + form.smallEggs + form.mediumEggs + form.largeEggs + form.xlEggs;
+    const brokenCount = form.brokenEggs;
+
     addEggCollection({
       id: crypto.randomUUID(),
       ...form,
-    });
+      wholeCount,
+      brokenCount
+    } as EggCollection);
+    
     setForm({
       batchId: '',
       date: new Date().toISOString().split('T')[0],
@@ -103,6 +115,7 @@ const EggCollectionPage = () => {
       xlEggs: 0,
       notes: '',
     });
+    
     setIsDialogOpen(false);
     toast.success('Egg collection recorded successfully');
   };
@@ -119,6 +132,12 @@ const EggCollectionPage = () => {
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[550px]">
+            <DialogHeader>
+              <DialogTitle>Add Egg Collection</DialogTitle>
+              <DialogDescription>
+                Record a new egg collection entry.
+              </DialogDescription>
+            </DialogHeader>
             <EggCollectionForm
               form={form}
               batches={batches}

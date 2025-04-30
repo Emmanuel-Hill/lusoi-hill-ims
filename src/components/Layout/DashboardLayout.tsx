@@ -48,7 +48,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen flex">
       {/* Sidebar */}
-      <Sidebar />
+      <Sidebar expanded={isSidebarOpen} />
 
       {/* Content area */}
       <div className={cn(
