@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -47,10 +48,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen flex">
       {/* Sidebar */}
-      <Sidebar 
-        isSidebarOpen={isSidebarOpen} 
-        setIsSidebarOpen={setIsSidebarOpen} 
-      />
+      <Sidebar />
 
       {/* Content area */}
       <div className={cn(

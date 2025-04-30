@@ -24,31 +24,46 @@ const OrderItemsList = ({ items, products, onRemove }: OrderItemsListProps) => {
     return product ? product.name : 'Unknown Product';
   };
 
+  // Add product price lookup
+  const getProductPrice = (productId: string) => {
+    const product = products.find(p => p.id === productId);
+    return product ? product.currentPrice : 0;
+  };
+
   return (
     <Table>
       <TableHeader>
         <TableRow>
           <TableHead>Product</TableHead>
           <TableHead>Quantity</TableHead>
+          <TableHead className="text-right">Unit Price</TableHead>
+          <TableHead className="text-right">Total</TableHead>
           <TableHead></TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
-        {items.map((item) => (
-          <TableRow key={item.productId}>
-            <TableCell>{getProductName(item.productId)}</TableCell>
-            <TableCell>{item.quantity}</TableCell>
-            <TableCell>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onRemove(item.productId)}
-              >
-                <Trash2 className="h-4 w-4 text-destructive" />
-              </Button>
-            </TableCell>
-          </TableRow>
-        ))}
+        {items.map((item) => {
+          const unitPrice = getProductPrice(item.productId);
+          const total = unitPrice * item.quantity;
+          
+          return (
+            <TableRow key={item.productId}>
+              <TableCell>{getProductName(item.productId)}</TableCell>
+              <TableCell>{item.quantity}</TableCell>
+              <TableCell className="text-right">${unitPrice.toFixed(2)}</TableCell>
+              <TableCell className="text-right">${total.toFixed(2)}</TableCell>
+              <TableCell>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onRemove(item.productId)}
+                >
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </TableCell>
+            </TableRow>
+          );
+        })}
       </TableBody>
     </Table>
   );
