@@ -58,7 +58,7 @@ const Vaccination = () => {
     notes: '',
   });
 
-  const handleVaccineChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleVaccineChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setVaccineForm({
       ...vaccineForm,

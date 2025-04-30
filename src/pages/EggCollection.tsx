@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import {
@@ -16,7 +15,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -99,10 +97,18 @@ const EggCollectionPage = () => {
 
     addEggCollection({
       id: crypto.randomUUID(),
-      ...form,
+      batchId: form.batchId,
+      date: form.date,
       wholeCount,
-      brokenCount
-    } as EggCollection);
+      brokenCount,
+      notes: form.notes,
+      smallEggs: form.smallEggs,
+      mediumEggs: form.mediumEggs,
+      largeEggs: form.largeEggs,
+      xlEggs: form.xlEggs,
+      goodEggs: form.goodEggs,
+      brokenEggs: form.brokenEggs
+    });
     
     setForm({
       batchId: '',

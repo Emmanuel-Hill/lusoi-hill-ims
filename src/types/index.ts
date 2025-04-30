@@ -16,6 +16,13 @@ export interface EggCollection {
   wholeCount: number;
   brokenCount: number;
   notes?: string;
+  // Add optional properties for compatibility with the expanded form
+  smallEggs?: number;
+  mediumEggs?: number;
+  largeEggs?: number;
+  xlEggs?: number;
+  goodEggs?: number;
+  brokenEggs?: number;
 }
 
 // Types for Feed Management
