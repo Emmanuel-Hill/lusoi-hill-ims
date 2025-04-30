@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import {
@@ -32,10 +33,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import {
   Plus,
-  Phone,
-  MapPin,
-  ShoppingBag,
   Calendar,
+  PhoneCall,
+  MapPin,
+  ShoppingCart,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
@@ -51,6 +52,18 @@ const Customers = () => {
     address: '',
     notes: '',
   });
+  
+  // Add contact dialog state
+  const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
+  const [currentCustomer, setCurrentCustomer] = useState<string | null>(null);
+  
+  // Add map dialog state
+  const [isMapDialogOpen, setIsMapDialogOpen] = useState(false);
+  const [mapAddress, setMapAddress] = useState('');
+  
+  // Add orders dialog state
+  const [isOrdersDialogOpen, setIsOrdersDialogOpen] = useState(false);
+  const [customerOrders, setCustomerOrders] = useState<any[]>([]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -67,6 +80,7 @@ const Customers = () => {
     }
 
     addCustomer({
+      id: crypto.randomUUID(),
       name: formData.name,
       contactNumber: formData.contactNumber,
       address: formData.address,
@@ -82,6 +96,26 @@ const Customers = () => {
 
     setIsDialogOpen(false);
     toast.success('Customer added successfully');
+  };
+  
+  // Handle contact button click
+  const handleContactClick = (customerId: string) => {
+    const customer = customers.find(c => c.id === customerId);
+    setCurrentCustomer(customerId);
+    setIsContactDialogOpen(true);
+  };
+  
+  // Handle map button click
+  const handleMapClick = (address: string) => {
+    setMapAddress(address);
+    setIsMapDialogOpen(true);
+  };
+  
+  // Handle orders button click
+  const handleOrdersClick = (customerId: string) => {
+    const customerOrders = orders.filter(order => order.customerId === customerId);
+    setCustomerOrders(customerOrders);
+    setIsOrdersDialogOpen(true);
   };
   
   // Add report generation handler
@@ -197,7 +231,6 @@ const Customers = () => {
                     <TableCell>{customer.contactNumber || '-'}</TableCell>
                     <TableCell>{customer.address || '-'}</TableCell>
                     <TableCell>
-                      {/* Placeholder for last activity */}
                       <div className="flex items-center">
                         <Calendar className="mr-2 h-4 w-4" />
                         {formatDistanceToNow(new Date(), {
@@ -206,16 +239,29 @@ const Customers = () => {
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="sm">
-                        <Phone className="h-4 w-4 mr-2" />
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleContactClick(customer.id)}
+                      >
+                        <PhoneCall className="h-4 w-4 mr-2" />
                         Contact
                       </Button>
-                      <Button variant="ghost" size="sm">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleMapClick(customer.address || '')}
+                        disabled={!customer.address}
+                      >
                         <MapPin className="h-4 w-4 mr-2" />
                         Map
                       </Button>
-                      <Button variant="ghost" size="sm">
-                        <ShoppingBag className="h-4 w-4 mr-2" />
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleOrdersClick(customer.id)}
+                      >
+                        <ShoppingCart className="h-4 w-4 mr-2" />
                         Orders
                       </Button>
                     </TableCell>
@@ -232,6 +278,153 @@ const Customers = () => {
           </Table>
         </CardContent>
       </Card>
+      
+      {/* Contact Dialog */}
+      <Dialog open={isContactDialogOpen} onOpenChange={setIsContactDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Contact Customer</DialogTitle>
+            <DialogDescription>
+              Customer contact information
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            {currentCustomer && (
+              <div className="space-y-4">
+                {(() => {
+                  const customer = customers.find(c => c.id === currentCustomer);
+                  return customer ? (
+                    <>
+                      <div>
+                        <h3 className="font-medium">Name</h3>
+                        <p>{customer.name}</p>
+                      </div>
+                      <div>
+                        <h3 className="font-medium">Phone</h3>
+                        <p>{customer.contactNumber || 'Not provided'}</p>
+                        {customer.contactNumber && (
+                          <Button 
+                            variant="outline" 
+                            className="mt-2"
+                            onClick={() => window.open(`tel:${customer.contactNumber}`)}
+                          >
+                            <PhoneCall className="h-4 w-4 mr-2" />
+                            Call
+                          </Button>
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="font-medium">Notes</h3>
+                        <p>{customer.notes || 'No notes'}</p>
+                      </div>
+                    </>
+                  ) : (
+                    <p>Customer not found</p>
+                  );
+                })()}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsContactDialogOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Map Dialog */}
+      <Dialog open={isMapDialogOpen} onOpenChange={setIsMapDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Customer Location</DialogTitle>
+            <DialogDescription>
+              {mapAddress || 'No address provided'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            {mapAddress ? (
+              <div className="space-y-4">
+                <div className="bg-muted aspect-video rounded-md flex items-center justify-center">
+                  <div className="text-center p-4">
+                    <MapPin className="h-8 w-8 mx-auto mb-2" />
+                    <p>{mapAddress}</p>
+                  </div>
+                </div>
+                <Button 
+                  className="w-full" 
+                  onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(mapAddress)}`, '_blank')}
+                >
+                  <MapPin className="h-4 w-4 mr-2" />
+                  Open in Google Maps
+                </Button>
+              </div>
+            ) : (
+              <p className="text-center py-8 text-muted-foreground">No address available for this customer</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsMapDialogOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Orders Dialog */}
+      <Dialog open={isOrdersDialogOpen} onOpenChange={setIsOrdersDialogOpen}>
+        <DialogContent className="sm:max-w-[700px]">
+          <DialogHeader>
+            <DialogTitle>Customer Orders</DialogTitle>
+            <DialogDescription>
+              View all orders for this customer
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            {customerOrders.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Delivery Date</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Products</TableHead>
+                    <TableHead>Location</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {customerOrders.map((order) => (
+                    <TableRow key={order.id}>
+                      <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
+                      <TableCell>{new Date(order.deliveryDate).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant={
+                            order.status === 'Delivered' ? 'success' : 
+                            order.status === 'Processing' ? 'default' :
+                            order.status === 'Pending' ? 'secondary' : 'destructive'
+                          }
+                        >
+                          {order.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{order.products.length} items</TableCell>
+                      <TableCell>{order.deliveryLocation}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <p className="text-center py-8 text-muted-foreground">No orders found for this customer</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsOrdersDialogOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
