@@ -1,371 +1,455 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from '@/components/ui/card';
-import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { toast } from 'sonner';
-import { User, UserRole } from '@/types';
-import { ModuleAccess } from '@/types/moduleAccess';
-import { PlusCircle } from 'lucide-react';
+import { User, UserRole, ModuleAccess } from '@/types';
+import { CheckCheck } from "lucide-react";
 
-// Import the refactored components
-import UsersTable from '@/components/users/UsersTable';
-import UserForm from '@/components/users/UserForm';
+const defaultModuleAccess: ModuleAccess = {
+  dashboard: true,
+  batches: true,
+  eggCollection: true,
+  feedManagement: true,
+  vaccination: true,
+  sales: true,
+  customers: true,
+  calendar: true,
+  reports: true,
+  userManagement: true,
+  warehouse: true,
+};
 
 const UserManagement = () => {
-  const { users, addUser, updateUser, deleteUser, hasAccess } = useAppContext();
-  
+  const { users, addUser, updateUser, deleteUser } = useAppContext();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  
-  // New user form state
-  const [newUser, setNewUser] = useState({
+  const [userForm, setUserForm] = useState({
     name: '',
     email: '',
-    password: 'password123', // Default temporary password
-    role: 'ProductionManager' as UserRole,
+    password: '',
+    role: 'SalesTeamMember' as UserRole,
     active: true,
-    initialLoginComplete: false, // New users need to change password on first login
-    moduleAccess: {
-      dashboard: true,
-      batches: false,
-      eggCollection: false,
-      feedManagement: false,
-      vaccination: false,
-      sales: false,
-      customers: false,
-      calendar: false,
-      reports: false,
-      userManagement: false,
-      warehouse: false
-    } as ModuleAccess
+    moduleAccess: defaultModuleAccess,
   });
-  
-  // Generate email from name
-  const generateEmail = (name: string): string => {
-    // Remove any special characters and spaces, convert to lowercase
-    const cleanName = name.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '');
-    return `${cleanName}@lusoihillfarm.co.ke`;
+
+  useEffect(() => {
+    if (selectedUser) {
+      setUserForm({
+        name: selectedUser.name,
+        email: selectedUser.email,
+        password: '', // Do not pre-fill password for security
+        role: selectedUser.role,
+        active: selectedUser.active,
+        moduleAccess: selectedUser.moduleAccess,
+      });
+    }
+  }, [selectedUser]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setUserForm({
+      ...userForm,
+      [name]: value,
+    });
   };
 
-  // Handle name change and auto-generate email
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const name = e.target.value;
-    setNewUser({
-      ...newUser,
-      name,
-      email: generateEmail(name)
+  const handleRoleChange = (role: UserRole) => {
+    setUserForm({
+      ...userForm,
+      role: role,
     });
   };
-  
-  // Handle email change for direct modifications
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNewUser({
-      ...newUser,
-      email: e.target.value
+
+  const handleActiveChange = (active: boolean) => {
+    setUserForm({
+      ...userForm,
+      active: active,
     });
   };
-  
-  // Handle password change for new users
-  const handleTempPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNewUser({
-      ...newUser,
-      password: e.target.value
+
+  const handleModuleAccessChange = (module: keyof ModuleAccess, checked: boolean) => {
+    setUserForm({
+      ...userForm,
+      moduleAccess: {
+        ...userForm.moduleAccess,
+        [module]: checked,
+      },
     });
   };
-  
-  // Handle name change and auto-generate email for edit mode
-  const handleEditNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!selectedUser) return;
-    
-    const name = e.target.value;
-    setSelectedUser({
-      ...selectedUser,
-      name,
-      email: generateEmail(name)
-    });
-  };
-  
-  // Handle email change for direct modifications in edit mode
-  const handleEditEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!selectedUser) return;
-    
-    setSelectedUser({
-      ...selectedUser,
-      email: e.target.value
-    });
-  };
-  
-  // Handle role templates
-  const applyRoleTemplate = (role: UserRole) => {
-    let moduleAccess: ModuleAccess = {
-      dashboard: true,
-      batches: false,
-      eggCollection: false,
-      feedManagement: false,
-      vaccination: false,
-      sales: false,
-      customers: false,
-      calendar: false,
-      reports: false,
-      userManagement: false,
-      warehouse: false
-    };
-    
-    switch(role) {
-      case 'Admin':
-      case 'OperationsManager':
-      case 'Owner':
-      case 'ITSpecialist':
-        // Full access for these roles
-        Object.keys(moduleAccess).forEach(key => {
-          moduleAccess[key as keyof ModuleAccess] = true;
-        });
-        break;
-      case 'ProductionManager':
-        moduleAccess = {
-          ...moduleAccess,
-          batches: true,
-          eggCollection: true,
-          feedManagement: true,
-          vaccination: true,
-          calendar: true,
-          reports: true
-        };
-        break;
-      case 'SalesManager':
-        moduleAccess = {
-          ...moduleAccess,
-          sales: true,
-          customers: true,
-          calendar: true,
-          reports: true
-        };
-        break;
-      case 'SalesTeamMember':
-        moduleAccess = {
-          ...moduleAccess,
-          sales: true,
-          customers: true,
-          calendar: true
-        };
-        break;
-      case 'Driver':
-        moduleAccess = {
-          ...moduleAccess,
-          customers: true,
-          calendar: true
-        };
-        break;
-      case 'WarehouseManager':
-        moduleAccess = {
-          ...moduleAccess,
-          batches: true,
-          eggCollection: true,
-          calendar: true
-        };
-        break;
-    }
-    
-    if (isEditDialogOpen && selectedUser) {
-      setSelectedUser({
-        ...selectedUser,
-        role,
-        moduleAccess
-      });
-    } else {
-      setNewUser({
-        ...newUser,
-        role,
-        moduleAccess
-      });
-    }
-  };
-  
-  // Handle form submission for adding a new user
+
   const handleAddUser = () => {
-    if (!newUser.name || !newUser.email) {
-      toast.error('Name and email are required');
+    if (!userForm.name || !userForm.email || !userForm.password) {
+      toast.error('Please fill in all required fields');
       return;
     }
-    
-    if (!newUser.password || newUser.password.trim() === '') {
-      toast.error('Temporary password is required');
-      return;
-    }
-    
+
     addUser({
-      ...newUser,
-      initialLoginComplete: false // Ensure new users must change password
+      id: crypto.randomUUID(),
+      name: userForm.name,
+      email: userForm.email,
+      password: userForm.password,
+      role: userForm.role,
+      active: userForm.active,
+      moduleAccess: userForm.moduleAccess,
+      initialLoginComplete: false,
+      createdAt: new Date().toISOString(), // Add createdAt field
     });
-    toast.success('User added successfully');
+
+    setUserForm({
+      name: '',
+      email: '',
+      password: '',
+      role: 'SalesTeamMember',
+      active: true,
+      moduleAccess: defaultModuleAccess,
+    });
+
     setIsAddDialogOpen(false);
-    resetNewUserForm();
+    toast.success('User added successfully');
   };
-  
-  // Handle form submission for editing a user
+
+  const handleEditUser = (user: User) => {
+    setSelectedUser(user);
+    setIsEditDialogOpen(true);
+  };
+
   const handleUpdateUser = () => {
     if (!selectedUser) return;
-    
-    updateUser(selectedUser);
-    toast.success('User updated successfully');
+
+    const updatedUser = {
+      ...selectedUser,
+      name: userForm.name,
+      email: userForm.email,
+      role: userForm.role,
+      active: userForm.active,
+      moduleAccess: userForm.moduleAccess,
+    };
+
+    updateUser(updatedUser);
     setIsEditDialogOpen(false);
     setSelectedUser(null);
+    toast.success('User updated successfully');
   };
-  
-  // Handle user deletion
+
   const handleDeleteUser = (id: string) => {
     deleteUser(id);
     toast.success('User deleted successfully');
   };
-  
-  // Reset new user form
-  const resetNewUserForm = () => {
-    setNewUser({
-      name: '',
-      email: '',
-      password: 'password123',
-      role: 'ProductionManager',
-      active: true,
-      initialLoginComplete: false,
-      moduleAccess: {
-        dashboard: true,
-        batches: false,
-        eggCollection: false,
-        feedManagement: false,
-        vaccination: false,
-        sales: false,
-        customers: false,
-        calendar: false,
-        reports: false,
-        userManagement: false,
-        warehouse: false
-      }
-    });
-  };
-  
-  // Open edit dialog and set selected user
-  const openEditDialog = (user: User) => {
-    setSelectedUser({...user});
-    setIsEditDialogOpen(true);
-  };
-  
-  // Handle module access toggle
-  const toggleModuleAccess = (module: keyof ModuleAccess, value: boolean) => {
-    if (isEditDialogOpen && selectedUser) {
-      setSelectedUser({
-        ...selectedUser,
-        moduleAccess: {
-          ...selectedUser.moduleAccess,
-          [module]: value
-        }
-      });
-    } else {
-      setNewUser({
-        ...newUser,
-        moduleAccess: {
-          ...newUser.moduleAccess,
-          [module]: value
-        }
-      });
-    }
-  };
-  
-  // Handle setting user active status
-  const setUserActive = (active: boolean) => {
-    if (isEditDialogOpen && selectedUser) {
-      setSelectedUser({
-        ...selectedUser,
-        active
-      });
-    } else {
-      setNewUser({
-        ...newUser,
-        active
-      });
-    }
-  };
-  
-  if (!hasAccess('userManagement')) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Access Denied</CardTitle>
-          <CardDescription>You do not have permission to access the User Management module.</CardDescription>
-        </CardHeader>
-      </Card>
-    );
-  }
-  
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold">User Management</h1>
-          <p className="text-muted-foreground">Manage user accounts and access control</p>
-        </div>
+        <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="flex items-center gap-2">
-              <PlusCircle className="h-5 w-5" />
+            <Button>
               Add User
             </Button>
           </DialogTrigger>
-          <UserForm
-            user={newUser}
-            onSubmit={handleAddUser}
-            onCancel={() => setIsAddDialogOpen(false)}
-            isNew={true}
-            applyRoleTemplate={applyRoleTemplate}
-            handleNameChange={handleNameChange}
-            handleEmailChange={handleEmailChange}
-            handleTempPasswordChange={handleTempPasswordChange}
-            toggleModuleAccess={toggleModuleAccess}
-            setUserActive={setUserActive}
-          />
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Add New User</DialogTitle>
+              <DialogDescription>
+                Create a new user account.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="name" className="text-right">Name</Label>
+                <Input
+                  id="name"
+                  name="name"
+                  value={userForm.name}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="email" className="text-right">Email</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={userForm.email}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="password" className="text-right">Password</Label>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  value={userForm.password}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="role" className="text-right">Role</Label>
+                <Select onValueChange={(value) => handleRoleChange(value as UserRole)}>
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select a role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Admin">Admin</SelectItem>
+                    <SelectItem value="ProductionManager">Production Manager</SelectItem>
+                    <SelectItem value="OperationsManager">Operations Manager</SelectItem>
+                    <SelectItem value="Owner">Owner</SelectItem>
+                    <SelectItem value="ITSpecialist">IT Specialist</SelectItem>
+                    <SelectItem value="SalesManager">Sales Manager</SelectItem>
+                    <SelectItem value="SalesTeamMember">Sales Team Member</SelectItem>
+                    <SelectItem value="Driver">Driver</SelectItem>
+                    <SelectItem value="WarehouseManager">Warehouse Manager</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="active" className="text-right">Active</Label>
+                <Switch
+                  id="active"
+                  checked={userForm.active}
+                  onCheckedChange={handleActiveChange}
+                  className="col-span-3"
+                />
+              </div>
+            </div>
+            <ModuleAccessForm 
+              moduleAccess={userForm.moduleAccess}
+              onModuleAccessChange={handleModuleAccessChange}
+            />
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleAddUser}>
+                Add User
+              </Button>
+            </DialogFooter>
+          </DialogContent>
         </Dialog>
       </div>
-      
+
       <Card>
         <CardHeader>
           <CardTitle>Users</CardTitle>
-          <CardDescription>Manage system users and their permissions</CardDescription>
+          <CardDescription>Manage user accounts</CardDescription>
         </CardHeader>
         <CardContent>
-          <UsersTable 
-            users={users} 
-            onEdit={openEditDialog} 
-            onDelete={handleDeleteUser} 
-          />
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {users.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell className="font-medium">{user.name}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.role}</TableCell>
+                  <TableCell>
+                    {user.active ? (
+                      <Badge variant="outline">Active</Badge>
+                    ) : (
+                      <Badge variant="destructive">Inactive</Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEditUser(user)}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteUser(user.id)}
+                      className="text-destructive"
+                    >
+                      Delete
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
-      
-      {/* Edit User Dialog */}
-      {selectedUser && (
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <UserForm
-            user={selectedUser}
-            onSubmit={handleUpdateUser}
-            onCancel={() => setIsEditDialogOpen(false)}
-            isNew={false}
-            applyRoleTemplate={applyRoleTemplate}
-            handleNameChange={handleEditNameChange}
-            handleEmailChange={handleEditEmailChange}
-            toggleModuleAccess={toggleModuleAccess}
-            setUserActive={setUserActive}
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+            <DialogDescription>
+              Edit an existing user account.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">Name</Label>
+              <Input
+                id="name"
+                name="name"
+                value={userForm.name}
+                onChange={handleInputChange}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="email" className="text-right">Email</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                value={userForm.email}
+                onChange={handleInputChange}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="role" className="text-right">Role</Label>
+              <Select value={userForm.role} onValueChange={(value) => handleRoleChange(value as UserRole)}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select a role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Admin">Admin</SelectItem>
+                  <SelectItem value="ProductionManager">Production Manager</SelectItem>
+                  <SelectItem value="OperationsManager">Operations Manager</SelectItem>
+                  <SelectItem value="Owner">Owner</SelectItem>
+                  <SelectItem value="ITSpecialist">IT Specialist</SelectItem>
+                  <SelectItem value="SalesManager">Sales Manager</SelectItem>
+                  <SelectItem value="SalesTeamMember">Sales Team Member</SelectItem>
+                  <SelectItem value="Driver">Driver</SelectItem>
+                  <SelectItem value="WarehouseManager">Warehouse Manager</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="active" className="text-right">Active</Label>
+              <Switch
+                id="active"
+                checked={userForm.active}
+                onCheckedChange={handleActiveChange}
+                className="col-span-3"
+              />
+            </div>
+          </div>
+          <ModuleAccessForm 
+            moduleAccess={userForm.moduleAccess}
+            onModuleAccessChange={handleModuleAccessChange}
           />
-        </Dialog>
-      )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setIsEditDialogOpen(false);
+              setSelectedUser(null);
+            }}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdateUser}>
+              Update User
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
+
+interface ModuleAccessFormProps {
+  moduleAccess: ModuleAccess;
+  onModuleAccessChange: (module: keyof ModuleAccess, checked: boolean) => void;
+}
+
+const ModuleAccessForm: React.FC<ModuleAccessFormProps> = ({ moduleAccess, onModuleAccessChange }) => {
+  return (
+    <div className="space-y-2">
+      <h4 className="text-sm font-medium">Module Access</h4>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+        {Object.entries(moduleAccess).map(([module, hasAccess]) => (
+          <div key={module} className="flex items-center space-x-2">
+            <Switch
+              id={module}
+              checked={hasAccess}
+              onCheckedChange={(checked) => onModuleAccessChange(module as keyof ModuleAccess, checked)}
+            />
+            <Label htmlFor={module}>{module.charAt(0).toUpperCase() + module.slice(1)}</Label>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+interface BadgeProps {
+  variant?: "default" | "secondary" | "destructive" | "outline" | "success"
+}
+
+const Badge = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement> & BadgeProps>(
+  ({ className, variant, ...props }, ref) => {
+    return (
+      <div
+        className={cn(
+          "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+          variant === "default" && "bg-primary/10 text-primary-foreground",
+          variant === "secondary" && "bg-secondary/10 text-secondary-foreground",
+          variant === "destructive" && "bg-destructive/10 text-destructive-foreground",
+          variant === "outline" && "text-foreground",
+          variant === "success" && "bg-green-100 text-green-500",
+          className
+        )}
+        ref={ref}
+        {...props}
+      />
+    )
+  }
+)
+Badge.displayName = "Badge"
+
+function cn(...inputs: (string | undefined | null | boolean)[]): string {
+  return inputs.filter(Boolean).join(' ');
+}
 
 export default UserManagement;

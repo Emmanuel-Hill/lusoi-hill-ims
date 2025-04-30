@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { User, Batch, EggCollection, FeedConsumption, FeedInventory, FeedType, VaccinationRecord, Vaccine, Product, Sale, Customer, Order } from '@/types';
 import { ModuleAccess } from '@/types/moduleAccess';
@@ -57,6 +56,10 @@ interface AppContextProps {
   customers: Customer[];
   orders: Order[];
   addCustomer: (customer: Customer) => void;
+  
+  // Order management
+  addOrder: (order: Order) => void;
+  updateOrderStatus: (orderId: string, status: 'Pending' | 'Processing' | 'Delivered' | 'Cancelled') => void;
 }
 
 const AppContext = createContext<AppContextProps | undefined>(undefined);
@@ -280,6 +283,21 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     setCustomers([...customers, newCustomer]);
   };
 
+  // Order management functions
+  const addOrder = (order: Order) => {
+    const newOrder = { ...order, id: crypto.randomUUID() };
+    setOrders([...orders, newOrder]);
+  };
+
+  const updateOrderStatus = (orderId: string, status: 'Pending' | 'Processing' | 'Delivered' | 'Cancelled') => {
+    setOrders(orders.map(order => {
+      if (order.id === orderId) {
+        return { ...order, status };
+      }
+      return order;
+    }));
+  };
+
   return (
     <AppContext.Provider value={{ 
       // User management
@@ -333,7 +351,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       // Customer management
       customers,
       orders,
-      addCustomer
+      addCustomer,
+      
+      // Order management
+      addOrder,
+      updateOrderStatus
     }}>
       {children}
     </AppContext.Provider>

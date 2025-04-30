@@ -1,116 +1,149 @@
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import {
-  LayoutDashboard,
-  Users,
-  Egg,
-  Calendar,
-  Package,
-  Syringe,
-  ShoppingCart,
-  X,
-  Utensils,
-  FileText,
-  UserCog
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useModuleAccess } from '@/context/ModuleAccessContext';
-import { ModuleAccess } from '@/types/moduleAccess';
+import { useAppContext } from '@/context/AppContext';
+import {
+  Layers,
+  Egg,
+  Wheat,
+  Syringe,
+  ShoppingCart,
+  Users,
+  Calendar,
+  LineChart,
+  CircleUser,
+  Store,
+  Package,
+} from 'lucide-react';
 
-interface SidebarProps {
-  isSidebarOpen: boolean;
-  setIsSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
-}
-
-const Sidebar: React.FC<SidebarProps> = ({ isSidebarOpen, setIsSidebarOpen }) => {
-  const location = useLocation();
-  const { hasAccess } = useModuleAccess();
-  
-  // Navigation items with access control
-  const navigation = [
-    { name: 'Dashboard', href: '/', icon: LayoutDashboard, access: 'dashboard' as keyof ModuleAccess },
-    { name: 'Batches', href: '/batches', icon: Users, access: 'batches' as keyof ModuleAccess },
-    { name: 'Egg Collection', href: '/egg-collection', icon: Egg, access: 'eggCollection' as keyof ModuleAccess },
-    { name: 'Feed Management', href: '/feed', icon: Utensils, access: 'feedManagement' as keyof ModuleAccess },
-    { name: 'Vaccination', href: '/vaccination', icon: Syringe, access: 'vaccination' as keyof ModuleAccess },
-    { name: 'Sales', href: '/sales', icon: ShoppingCart, access: 'sales' as keyof ModuleAccess },
-    { name: 'Customers', href: '/customers', icon: FileText, access: 'customers' as keyof ModuleAccess },
-    { name: 'Calendar', href: '/calendar', icon: Calendar, access: 'calendar' as keyof ModuleAccess },
-    { name: 'Warehouse', href: '/warehouse', icon: Package, access: 'warehouse' as keyof ModuleAccess },
-    { name: 'User Management', href: '/users', icon: UserCog, access: 'userManagement' as keyof ModuleAccess }
-  ];
-  
-  return (
-    <div
-      className={cn(
-        "fixed inset-y-0 left-0 z-50 w-64 transform bg-sidebar border-r border-sidebar-border transition-transform duration-200 ease-in-out",
-        isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-      )}
-    >
-      <div className="flex h-full flex-col">
-        <div className="flex items-center justify-between px-4 py-6">
-          <Link to="/" className="flex items-center space-x-2">
-            <img
-              src="/lovable-uploads/9eebc39c-2e9e-45dd-a2f3-7edc6d9d8bec.png"
-              alt="Lusoi Logo"
-              className="h-10 w-auto"
-            />
-            <span className="text-2xl font-bold text-green-700">Lusoi</span>
-          </Link>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsSidebarOpen(false)}
-            className="md:hidden"
-          >
-            <X className="h-6 w-6" />
-          </Button>
-        </div>
-
-        <nav className="flex-1 space-y-1 px-2 py-4">
-          {navigation.map((item) => {
-            const isActive = location.pathname === item.href;
-            // Only show menu items the user has access to
-            if (!hasAccess(item.access)) return null;
-            
-            return (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={cn(
-                  "group flex items-center px-2 py-2 text-sm font-medium rounded-md",
-                  isActive
-                    ? "bg-green-700 text-white"
-                    : "text-sidebar-foreground hover:bg-green-100 hover:text-green-800"
-                )}
-              >
-                <item.icon
-                  className={cn(
-                    "mr-3 h-5 w-5",
-                    isActive
-                      ? "text-white"
-                      : "text-green-700 group-hover:text-green-800"
-                  )}
-                />
-                {item.name}
-              </Link>
-            );
-          })}
-        </nav>
-
-        <div className="border-t border-sidebar-border p-4">
-          <div className="text-xs font-semibold text-sidebar-foreground">
-            Lusoi Poultry Management
-          </div>
-          <div className="mt-1 text-xs text-sidebar-foreground/70">
-            © 2025 All rights reserved
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+// Animation variants for the sidebar items
+const itemVariants = {
+  closed: {
+    opacity: 0,
+  },
+  open: {
+    opacity: 1,
+  },
 };
 
-export default Sidebar;
+interface SidebarItemProps {
+  to: string;
+  icon: React.ElementType;
+  children: React.ReactNode;
+  expanded: boolean;
+  active?: boolean;
+}
+
+const SidebarItem: React.FC<SidebarItemProps> = ({
+  to,
+  icon: Icon,
+  children,
+  expanded,
+  active = false,
+}) => (
+  <NavLink
+    to={to}
+    className={({ isActive }) =>
+      cn(
+        'flex items-center rounded-md px-3 py-2 text-sm transition-colors h-10',
+        'hover:bg-accent hover:text-accent-foreground',
+        isActive
+          ? 'bg-accent text-accent-foreground font-medium'
+          : 'text-muted-foreground',
+        !expanded && 'justify-center'
+      )
+    }
+  >
+    <Icon className={cn('h-5 w-5', expanded && 'mr-2')} />
+    {expanded && <span>{children}</span>}
+  </NavLink>
+);
+
+interface SidebarProps {
+  expanded: boolean;
+}
+
+export default function Sidebar({ expanded }: SidebarProps) {
+  const location = useLocation();
+  const { hasAccess } = useModuleAccess();
+  const { isInitialLogin } = useAppContext();
+
+  return (
+    <aside
+      className={cn(
+        'bg-background flex flex-col h-full py-2 border-r transition-all duration-300',
+        expanded ? 'w-56' : 'w-14'
+      )}
+    >
+      <nav className="space-y-1 px-2 flex-1">
+        {hasAccess('dashboard') && (
+          <SidebarItem to="/dashboard" icon={LineChart} expanded={expanded}>
+            Dashboard
+          </SidebarItem>
+        )}
+        
+        {hasAccess('batches') && (
+          <SidebarItem to="/batches" icon={Layers} expanded={expanded}>
+            Batches
+          </SidebarItem>
+        )}
+        
+        {hasAccess('eggCollection') && (
+          <SidebarItem to="/egg-collection" icon={Egg} expanded={expanded}>
+            Egg Collection
+          </SidebarItem>
+        )}
+        
+        {hasAccess('feedManagement') && (
+          <SidebarItem to="/feed-management" icon={Wheat} expanded={expanded}>
+            Feed Management
+          </SidebarItem>
+        )}
+        
+        {hasAccess('vaccination') && (
+          <SidebarItem to="/vaccination" icon={Syringe} expanded={expanded}>
+            Vaccination
+          </SidebarItem>
+        )}
+        
+        {hasAccess('sales') && (
+          <SidebarItem to="/sales" icon={Store} expanded={expanded}>
+            Sales
+          </SidebarItem>
+        )}
+        
+        {hasAccess('customers') && (
+          <SidebarItem to="/customers" icon={Users} expanded={expanded}>
+            Customers
+          </SidebarItem>
+        )}
+        
+        {hasAccess('customers') && hasAccess('sales') && (
+          <SidebarItem to="/orders" icon={ShoppingCart} expanded={expanded}>
+            Orders
+          </SidebarItem>
+        )}
+        
+        {hasAccess('warehouse') && (
+          <SidebarItem to="/warehouse" icon={Package} expanded={expanded}>
+            Warehouse
+          </SidebarItem>
+        )}
+        
+        {hasAccess('calendar') && (
+          <SidebarItem to="/calendar" icon={Calendar} expanded={expanded}>
+            Calendar
+          </SidebarItem>
+        )}
+        
+        {hasAccess('userManagement') && (
+          <SidebarItem to="/users" icon={CircleUser} expanded={expanded}>
+            User Management
+          </SidebarItem>
+        )}
+      </nav>
+    </aside>
+  );
+}

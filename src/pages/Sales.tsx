@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import {
@@ -7,7 +6,6 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -118,6 +116,7 @@ const Sales = () => {
 
     // Add priceUpdatedAt field to match the Product type requirements
     const productData = {
+      id: crypto.randomUUID(),
       ...productForm,
       priceUpdatedAt: new Date().toISOString().split('T')[0]
     };
@@ -162,6 +161,7 @@ const Sales = () => {
     
     // Create a new product from the batch
     addProduct({
+      id: crypto.randomUUID(),
       name: batchProductForm.name,
       type: 'Bird',
       condition: 'NA',
@@ -296,7 +296,14 @@ const Sales = () => {
       return;
     }
 
-    addSale(saleForm);
+    addSale({
+      id: crypto.randomUUID(),
+      date: saleForm.date,
+      customerId: saleForm.customerId,
+      products: saleForm.products,
+      totalAmount: saleForm.totalAmount,
+      notes: saleForm.notes,
+    });
     setSaleForm({
       date: new Date().toISOString().split('T')[0],
       customerId: '',

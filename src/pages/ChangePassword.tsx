@@ -1,129 +1,100 @@
-
 import React, { useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
 import { useAppContext } from '@/context/AppContext';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useToast } from '@/hooks/use-toast';
-import { Lock } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
 
 const ChangePassword = () => {
-  const { currentUser, changeUserPassword, setInitialLoginComplete } = useAppContext();
+  const { currentUser, changeUserPassword } = useAppContext();
+  const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  
-  // If not logged in, redirect to login
-  if (!currentUser) {
-    return <Navigate to="/login" />;
-  }
-  
-  const handleChangePassword = (e: React.FormEvent) => {
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
-    
-    // Validate passwords
-    if (newPassword.length < 6) {
-      setError('Password must be at least 6 characters');
-      setLoading(false);
+    setError('');
+    setSuccess('');
+
+    if (!oldPassword) {
+      setError('Current password is required');
       return;
     }
-    
+
+    if (!newPassword) {
+      setError('New password is required');
+      return;
+    }
+
     if (newPassword !== confirmPassword) {
       setError('Passwords do not match');
-      setLoading(false);
       return;
     }
-    
-    // Artificial delay to simulate server request
-    setTimeout(() => {
-      // Change password and mark initial login complete
-      changeUserPassword(currentUser.id, newPassword);
-      setInitialLoginComplete(currentUser.id);
-      
-      toast({
-        title: "Password updated",
-        description: "Your password has been changed successfully",
-      });
-      
-      // Redirect to dashboard
-      navigate('/');
-      setLoading(false);
-    }, 1000);
+
+    if (currentUser) {
+      const changed = changeUserPassword(currentUser.id, oldPassword, newPassword);
+      if (changed) {
+        setSuccess('Password changed successfully');
+        setOldPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      } else {
+        setError('Current password is incorrect');
+      }
+    }
   };
-  
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md px-4">
-        <div className="flex justify-center mb-8">
-          <img 
-            src="/lovable-uploads/9eebc39c-2e9e-45dd-a2f3-7edc6d9d8bec.png" 
-            alt="Lusoi Hill Farm" 
-            className="h-24"
-          />
-        </div>
-        
-        <Card className="w-full">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold text-center">Change Your Password</CardTitle>
-            <CardDescription className="text-center">
-              Please set a new password for your account
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleChangePassword} className="space-y-4">
-              {error && (
-                <Alert variant="destructive" className="mb-4">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-              
-              <div className="space-y-2">
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="password"
-                    placeholder="New password"
-                    className="pl-10"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="password"
-                    placeholder="Confirm new password"
-                    className="pl-10"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-              
-              <Button type="submit" className="w-full bg-green-700 hover:bg-green-800" disabled={loading}>
-                {loading ? 'Updating...' : 'Update Password'}
-              </Button>
-            </form>
-          </CardContent>
-          <CardFooter className="flex justify-center">
-            <p className="text-sm text-muted-foreground">
-              Lusoi Hill Farm Poultry Management System
-            </p>
-          </CardFooter>
-        </Card>
-      </div>
+    <div className="container mx-auto py-10">
+      <Card className="w-[500px] mx-auto">
+        <CardHeader>
+          <CardTitle>Change Password</CardTitle>
+          <CardDescription>Update your account password</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {error && <div className="text-red-500">{error}</div>}
+          {success && <div className="text-green-500">{success}</div>}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="oldPassword">Current Password</Label>
+              <Input
+                type="password"
+                id="oldPassword"
+                value={oldPassword}
+                onChange={(e) => setOldPassword(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="newPassword">New Password</Label>
+              <Input
+                type="password"
+                id="newPassword"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="confirmPassword">Confirm New Password</Label>
+              <Input
+                type="password"
+                id="confirmPassword"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+            </div>
+            <Button type="submit">Change Password</Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 };
