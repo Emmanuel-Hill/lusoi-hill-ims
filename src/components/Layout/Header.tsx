@@ -32,7 +32,7 @@ const Header: React.FC<HeaderProps> = ({ isSidebarOpen, setIsSidebarOpen }) => {
   };
   
   return (
-    <div className="bg-background border-b border-border">
+    <div className="bg-white border-b border-gray-200 shadow-sm">
       <div className="px-4 py-3 flex items-center justify-between">
         <div className="flex items-center">
           {/* Menu button for mobile only */}
@@ -40,7 +40,7 @@ const Header: React.FC<HeaderProps> = ({ isSidebarOpen, setIsSidebarOpen }) => {
             variant="ghost"
             size="icon"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="md:hidden text-primary"
+            className="md:hidden text-lusoi-500"
           >
             <Menu className="h-5 w-5" />
           </Button>
@@ -48,12 +48,12 @@ const Header: React.FC<HeaderProps> = ({ isSidebarOpen, setIsSidebarOpen }) => {
         
         <div className="flex items-center space-x-4">
           {/* User info - desktop view */}
-          <div className="hidden md:flex items-center border-r border-border pr-4">
+          <div className="hidden md:flex items-center border-r border-gray-200 pr-4">
             <div className="text-right mr-2">
-              <p className="font-medium text-sm">{currentUser?.role || 'User'}</p>
-              <p className="text-xs text-muted-foreground">{currentUser?.email || 'user@example.com'}</p>
+              <p className="font-medium text-sm text-black">{currentUser?.role || 'User'}</p>
+              <p className="text-xs text-gray-500">{currentUser?.email || 'user@example.com'}</p>
             </div>
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            <ChevronDown className="h-4 w-4 text-gray-500" />
           </div>
           
           {/* Logout button */}

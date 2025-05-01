@@ -30,8 +30,8 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ to, icon: Icon, children }) =
       cn(
         'flex items-center px-4 py-3 text-sm transition-colors',
         isActive
-          ? 'bg-sidebar-primary text-white font-medium'
-          : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground',
+          ? 'bg-lusoi-500 text-white font-medium'
+          : 'text-lusoi-600 hover:bg-lusoi-100 hover:text-lusoi-700',
       )
     }
   >
@@ -53,16 +53,16 @@ export default function Sidebar({ expanded }: SidebarProps) {
   }
 
   return (
-    <aside className="w-64 bg-sidebar-background border-r border-sidebar-border z-20 h-screen flex flex-col">
+    <aside className="w-64 bg-white border-r border-gray-200 z-20 h-screen flex flex-col">
       {/* Logo Area */}
-      <div className="px-6 py-5 border-b border-sidebar-border">
+      <div className="px-6 py-5 border-b border-gray-200">
         <div className="flex items-center">
           <img 
-            src="/lovable-uploads/cf99a3a6-af81-4c19-aa62-36e4b3bffd5c.png" 
+            src="/lovable-uploads/9f47a32c-ba10-492c-ae49-62d0c8cc1910.png" 
             alt="Lusoi Logo" 
-            className="h-12 mr-3" 
+            className="h-10 mr-2" 
           />
-          <h1 className="text-xl font-semibold text-primary">Lusoi</h1>
+          <h1 className="text-xl font-semibold text-black">Lusoi</h1>
         </div>
       </div>
       
@@ -134,7 +134,7 @@ export default function Sidebar({ expanded }: SidebarProps) {
         )}
       </nav>
 
-      <div className="px-4 py-4 border-t border-sidebar-border mt-auto text-xs text-sidebar-foreground/80">
+      <div className="px-4 py-4 border-t border-gray-200 mt-auto text-xs text-lusoi-600">
         Lusoi Poultry Management
         <p className="opacity-70">© 2025 All rights reserved</p>
       </div>
