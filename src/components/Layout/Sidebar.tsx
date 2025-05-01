@@ -1,9 +1,8 @@
 
 import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useModuleAccess } from '@/context/ModuleAccessContext';
-import { useAppContext } from '@/context/AppContext';
 import {
   LayoutDashboard,
   Layers,
@@ -15,39 +14,29 @@ import {
   Calendar,
   Store,
   Package,
-  CircleUser,
+  User,
 } from 'lucide-react';
 
 interface SidebarItemProps {
   to: string;
   icon: React.ElementType;
   children: React.ReactNode;
-  expanded: boolean;
-  active?: boolean;
 }
 
-const SidebarItem: React.FC<SidebarItemProps> = ({
-  to,
-  icon: Icon,
-  children,
-  expanded,
-  active = false,
-}) => (
+const SidebarItem: React.FC<SidebarItemProps> = ({ to, icon: Icon, children }) => (
   <NavLink
     to={to}
     className={({ isActive }) =>
       cn(
-        'flex items-center rounded-md px-3 py-2 text-sm transition-colors h-10 mb-1',
-        'hover:bg-lusoi-100 hover:text-lusoi-800',
+        'flex items-center px-4 py-3 text-sm transition-colors',
         isActive
-          ? 'bg-lusoi-500 text-white font-medium'
-          : 'text-lusoi-700',
-        !expanded && 'justify-center'
+          ? 'bg-green-600 text-white font-medium'
+          : 'text-gray-700 hover:bg-gray-100',
       )
     }
   >
-    <Icon className={cn('h-5 w-5', expanded && 'mr-3')} />
-    {expanded && <span>{children}</span>}
+    <Icon className="h-5 w-5 mr-3" />
+    <span>{children}</span>
   </NavLink>
 );
 
@@ -57,108 +46,98 @@ interface SidebarProps {
 
 export default function Sidebar({ expanded }: SidebarProps) {
   const { hasAccess } = useModuleAccess();
-  const { isInitialLogin } = useAppContext();
+
+  // Handle mobile sidebar
+  if (!expanded) {
+    return null; // Don't render if collapsed (mobile view)
+  }
 
   return (
-    <aside
-      className={cn(
-        'bg-lusoi-50 flex flex-col h-full py-4 border-r border-lusoi-100 transition-all duration-300',
-        expanded ? 'w-64' : 'w-16'
-      )}
-    >
+    <aside className="w-64 bg-white border-r border-gray-200 z-20 h-screen flex flex-col">
       {/* Logo Area */}
-      <div className={cn(
-        'px-4 mb-6',
-        !expanded && 'flex justify-center'
-      )}>
-        {expanded ? (
-          <div className="flex items-center">
-            <div className="w-8 h-8 bg-lusoi-500 rounded-md flex items-center justify-center text-white font-bold mr-2">
-              L
-            </div>
-            <h1 className="text-lusoi-700 text-xl font-bold">Lusoi</h1>
-          </div>
-        ) : (
-          <div className="w-8 h-8 bg-lusoi-500 rounded-md flex items-center justify-center text-white font-bold">
-            L
-          </div>
-        )}
+      <div className="px-6 py-5 border-b border-gray-200">
+        <div className="flex items-center">
+          <img 
+            src="/lovable-uploads/cf99a3a6-af81-4c19-aa62-36e4b3bffd5c.png" 
+            alt="Lusoi Logo" 
+            className="h-12 mr-3" 
+          />
+          <h1 className="text-xl font-semibold text-green-700">Lusoi</h1>
+        </div>
       </div>
       
-      <nav className="space-y-1 px-2 flex-1">
+      <nav className="flex-1 overflow-y-auto pt-4">
         {hasAccess('dashboard') && (
-          <SidebarItem to="/dashboard" icon={LayoutDashboard} expanded={expanded}>
+          <SidebarItem to="/dashboard" icon={LayoutDashboard}>
             Dashboard
           </SidebarItem>
         )}
         
         {hasAccess('batches') && (
-          <SidebarItem to="/batches" icon={Layers} expanded={expanded}>
+          <SidebarItem to="/batches" icon={Layers}>
             Batches
           </SidebarItem>
         )}
         
         {hasAccess('eggCollection') && (
-          <SidebarItem to="/egg-collection" icon={Egg} expanded={expanded}>
+          <SidebarItem to="/egg-collection" icon={Egg}>
             Egg Collection
           </SidebarItem>
         )}
         
         {hasAccess('feedManagement') && (
-          <SidebarItem to="/feed-management" icon={Wheat} expanded={expanded}>
+          <SidebarItem to="/feed-management" icon={Wheat}>
             Feed Management
           </SidebarItem>
         )}
         
         {hasAccess('vaccination') && (
-          <SidebarItem to="/vaccination" icon={Syringe} expanded={expanded}>
+          <SidebarItem to="/vaccination" icon={Syringe}>
             Vaccination
           </SidebarItem>
         )}
         
         {hasAccess('sales') && (
-          <SidebarItem to="/sales" icon={Store} expanded={expanded}>
+          <SidebarItem to="/sales" icon={Store}>
             Sales
           </SidebarItem>
         )}
         
         {hasAccess('customers') && (
-          <SidebarItem to="/customers" icon={Users} expanded={expanded}>
+          <SidebarItem to="/customers" icon={Users}>
             Customers
           </SidebarItem>
         )}
         
         {hasAccess('customers') && hasAccess('sales') && (
-          <SidebarItem to="/orders" icon={ShoppingCart} expanded={expanded}>
+          <SidebarItem to="/orders" icon={ShoppingCart}>
             Orders
           </SidebarItem>
         )}
         
         {hasAccess('warehouse') && (
-          <SidebarItem to="/warehouse" icon={Package} expanded={expanded}>
+          <SidebarItem to="/warehouse" icon={Package}>
             Warehouse
           </SidebarItem>
         )}
         
         {hasAccess('calendar') && (
-          <SidebarItem to="/calendar" icon={Calendar} expanded={expanded}>
+          <SidebarItem to="/calendar" icon={Calendar}>
             Calendar
           </SidebarItem>
         )}
         
         {hasAccess('userManagement') && (
-          <SidebarItem to="/users" icon={CircleUser} expanded={expanded}>
+          <SidebarItem to="/users" icon={User}>
             User Management
           </SidebarItem>
         )}
       </nav>
 
-      {expanded && (
-        <div className="px-4 py-2 mt-auto text-xs text-lusoi-600">
-          Lusoi Poultry Management
-          <p className="opacity-70">© 2025 All rights reserved</p>
-        </div>
-      )}
+      <div className="px-4 py-4 border-t border-gray-200 mt-auto text-xs text-gray-600">
+        Lusoi Poultry Management
+        <p className="opacity-70">© 2025 All rights reserved</p>
+      </div>
     </aside>
   );
 }

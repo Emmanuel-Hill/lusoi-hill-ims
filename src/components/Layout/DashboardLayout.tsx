@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useModuleAccess } from '@/context/ModuleAccessContext';
@@ -14,7 +14,7 @@ interface DashboardLayoutProps {
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = React.useState(true); // Always open on desktop
   const location = useLocation();
   const { hasAccess, allModules } = useModuleAccess();
   
@@ -48,14 +48,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen flex bg-gray-50">
-      {/* Sidebar */}
+      {/* Sidebar - always shown on desktop, toggleable on mobile */}
       <Sidebar expanded={isSidebarOpen} />
 
       {/* Content area */}
-      <div className={cn(
-        "flex-1 transition-all duration-300 flex flex-col",
-        isSidebarOpen ? "md:ml-64" : "ml-16"
-      )}>
+      <div className="flex-1 flex flex-col">
         {/* Top navigation */}
         <Header 
           isSidebarOpen={isSidebarOpen} 

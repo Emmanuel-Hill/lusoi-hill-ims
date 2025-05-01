@@ -39,6 +39,7 @@ const Dashboard = () => {
     })
     .map(record => {
       const batch = batches.find(b => b.id === record.batchId);
+      // Use the vaccine field name that's actually in the record
       return {
         ...record,
         batchName: batch?.name || 'Unknown Batch'
@@ -48,8 +49,8 @@ const Dashboard = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight text-lusoi-800">Dashboard</h1>
-        <p className="text-sm text-muted-foreground bg-white px-3 py-1 rounded-full border shadow-sm">
+        <h1 className="text-2xl font-semibold text-gray-800">Dashboard</h1>
+        <p className="text-sm text-gray-600 bg-white px-3 py-1 rounded-md border shadow-sm">
           {new Date().toLocaleDateString('en-US', { 
             weekday: 'long', 
             year: 'numeric', 
@@ -60,45 +61,45 @@ const Dashboard = () => {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="overflow-hidden border-t-4 border-t-lusoi-500 shadow-md hover:shadow-lg transition-all">
+        <Card className="shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Batches</CardTitle>
-            <div className="h-8 w-8 rounded-full bg-lusoi-100 flex items-center justify-center">
-              <Users className="h-4 w-4 text-lusoi-700" />
+            <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
+              <Users className="h-4 w-4 text-gray-600" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-lusoi-800">{batches.length}</div>
+            <div className="text-3xl font-bold">{batches.length}</div>
             <p className="text-xs text-muted-foreground mt-1">
               {totalBirds} birds in total
             </p>
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden border-t-4 border-t-amber-500 shadow-md hover:shadow-lg transition-all">
+        <Card className="shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Today's Eggs</CardTitle>
-            <div className="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center">
-              <Egg className="h-4 w-4 text-amber-700" />
+            <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
+              <Egg className="h-4 w-4 text-gray-600" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-amber-800">{totalEggsToday}</div>
+            <div className="text-3xl font-bold">{totalEggsToday}</div>
             <p className="text-xs text-muted-foreground mt-1">
               {eggRate}% laying rate
             </p>
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden border-t-4 border-t-emerald-500 shadow-md hover:shadow-lg transition-all">
+        <Card className="shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Feed Used Today</CardTitle>
-            <div className="h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center">
-              <Utensils className="h-4 w-4 text-emerald-700" />
+            <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
+              <Utensils className="h-4 w-4 text-gray-600" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-emerald-800">
+            <div className="text-3xl font-bold">
               {feedConsumption
                 .filter(feed => feed.date === today)
                 .reduce((sum, feed) => sum + feed.quantityKg, 0)} kg
@@ -109,15 +110,15 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden border-t-4 border-t-purple-500 shadow-md hover:shadow-lg transition-all">
+        <Card className="shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Laying Batches</CardTitle>
-            <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center">
-              <Egg className="h-4 w-4 text-purple-700" />
+            <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
+              <Egg className="h-4 w-4 text-gray-600" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-purple-800">
+            <div className="text-3xl font-bold">
               {batches.filter(batch => batch.batchStatus === 'Laying').length}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
@@ -128,9 +129,9 @@ const Dashboard = () => {
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
-        <Card className="col-span-2 shadow-md">
+        <Card className="col-span-2 shadow-sm">
           <CardHeader>
-            <CardTitle className="text-lg text-lusoi-800">Production Overview</CardTitle>
+            <CardTitle>Production Overview</CardTitle>
             <CardDescription>
               Daily egg production for the past 7 days
             </CardDescription>
@@ -142,34 +143,34 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="shadow-md">
+        <Card className="shadow-sm">
           <CardHeader className="flex flex-row items-center">
             <div>
-              <CardTitle className="text-lg text-lusoi-800">Upcoming Vaccinations</CardTitle>
+              <CardTitle>Upcoming Vaccinations</CardTitle>
               <CardDescription>Next 7 days</CardDescription>
             </div>
-            <Calendar className="ml-auto h-5 w-5 text-lusoi-600" />
+            <Calendar className="ml-auto h-5 w-5 text-gray-500" />
           </CardHeader>
           <CardContent className="max-h-80 overflow-y-auto">
             {upcomingVaccinations.length > 0 ? (
               <ul className="space-y-3">
                 {upcomingVaccinations.map(vacc => (
-                  <li key={vacc.id} className="flex items-start space-x-3 p-3 bg-amber-50 rounded-lg">
+                  <li key={vacc.id} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
                     <AlertTriangle className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
                     <div>
-                      <p className="font-medium text-sm text-amber-800">{vacc.batchName}</p>
+                      <p className="font-medium text-sm">{vacc.batchName}</p>
                       <p className="text-muted-foreground text-xs">
                         Due on {new Date(vacc.nextScheduledDate || '').toLocaleDateString()}
                       </p>
-                      <p className="text-xs mt-1 text-amber-700">{vacc.vaccineName}</p>
+                      <p className="text-xs mt-1">{vacc.vaccineType || 'Vaccine'}</p>
                     </div>
                   </li>
                 ))}
               </ul>
             ) : (
               <div className="py-8 flex flex-col items-center justify-center text-center">
-                <div className="rounded-full bg-green-100 p-3 mb-3">
-                  <Calendar className="h-6 w-6 text-green-600" />
+                <div className="rounded-full bg-gray-100 p-3 mb-3">
+                  <Calendar className="h-6 w-6 text-gray-500" />
                 </div>
                 <p className="text-sm text-muted-foreground">No upcoming vaccinations.</p>
               </div>
