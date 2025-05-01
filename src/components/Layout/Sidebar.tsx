@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { useModuleAccess } from '@/context/ModuleAccessContext';
 import { useAppContext } from '@/context/AppContext';
 import {
+  LayoutDashboard,
   Layers,
   Egg,
   Wheat,
@@ -12,21 +13,10 @@ import {
   ShoppingCart,
   Users,
   Calendar,
-  LineChart,
-  CircleUser,
   Store,
   Package,
+  CircleUser,
 } from 'lucide-react';
-
-// Animation variants for the sidebar items
-const itemVariants = {
-  closed: {
-    opacity: 0,
-  },
-  open: {
-    opacity: 1,
-  },
-};
 
 interface SidebarItemProps {
   to: string;
@@ -47,16 +37,16 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
     to={to}
     className={({ isActive }) =>
       cn(
-        'flex items-center rounded-md px-3 py-2 text-sm transition-colors h-10',
-        'hover:bg-accent hover:text-accent-foreground',
+        'flex items-center rounded-md px-3 py-2 text-sm transition-colors h-10 mb-1',
+        'hover:bg-lusoi-100 hover:text-lusoi-800',
         isActive
-          ? 'bg-accent text-accent-foreground font-medium'
-          : 'text-muted-foreground',
+          ? 'bg-lusoi-500 text-white font-medium'
+          : 'text-lusoi-700',
         !expanded && 'justify-center'
       )
     }
   >
-    <Icon className={cn('h-5 w-5', expanded && 'mr-2')} />
+    <Icon className={cn('h-5 w-5', expanded && 'mr-3')} />
     {expanded && <span>{children}</span>}
   </NavLink>
 );
@@ -66,20 +56,38 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ expanded }: SidebarProps) {
-  const location = useLocation();
   const { hasAccess } = useModuleAccess();
   const { isInitialLogin } = useAppContext();
 
   return (
     <aside
       className={cn(
-        'bg-background flex flex-col h-full py-2 border-r transition-all duration-300',
-        expanded ? 'w-56' : 'w-14'
+        'bg-lusoi-50 flex flex-col h-full py-4 border-r border-lusoi-100 transition-all duration-300',
+        expanded ? 'w-64' : 'w-16'
       )}
     >
+      {/* Logo Area */}
+      <div className={cn(
+        'px-4 mb-6',
+        !expanded && 'flex justify-center'
+      )}>
+        {expanded ? (
+          <div className="flex items-center">
+            <div className="w-8 h-8 bg-lusoi-500 rounded-md flex items-center justify-center text-white font-bold mr-2">
+              L
+            </div>
+            <h1 className="text-lusoi-700 text-xl font-bold">Lusoi</h1>
+          </div>
+        ) : (
+          <div className="w-8 h-8 bg-lusoi-500 rounded-md flex items-center justify-center text-white font-bold">
+            L
+          </div>
+        )}
+      </div>
+      
       <nav className="space-y-1 px-2 flex-1">
         {hasAccess('dashboard') && (
-          <SidebarItem to="/dashboard" icon={LineChart} expanded={expanded}>
+          <SidebarItem to="/dashboard" icon={LayoutDashboard} expanded={expanded}>
             Dashboard
           </SidebarItem>
         )}
@@ -144,6 +152,13 @@ export default function Sidebar({ expanded }: SidebarProps) {
           </SidebarItem>
         )}
       </nav>
+
+      {expanded && (
+        <div className="px-4 py-2 mt-auto text-xs text-lusoi-600">
+          Lusoi Poultry Management
+          <p className="opacity-70">© 2025 All rights reserved</p>
+        </div>
+      )}
     </aside>
   );
 }

@@ -21,6 +21,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   // Map routes to module access keys
   const routeToModule: Record<string, keyof ModuleAccess> = {
     '/': 'dashboard',
+    '/dashboard': 'dashboard',
     '/batches': 'batches',
     '/egg-collection': 'eggCollection',
     '/feed': 'feedManagement',
@@ -46,30 +47,30 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   }
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-gray-50">
       {/* Sidebar */}
       <Sidebar expanded={isSidebarOpen} />
 
       {/* Content area */}
       <div className={cn(
-        "flex-1 transition-all duration-200",
-        isSidebarOpen ? "md:ml-64" : "ml-0"
+        "flex-1 transition-all duration-300 flex flex-col",
+        isSidebarOpen ? "md:ml-64" : "ml-16"
       )}>
         {/* Top navigation */}
-        <div className="relative">
-          <Header 
-            isSidebarOpen={isSidebarOpen} 
-            setIsSidebarOpen={setIsSidebarOpen} 
-          />
-          <div className="absolute top-4 right-6 z-10">
-            <DarkModeToggle />
-          </div>
-        </div>
-
+        <Header 
+          isSidebarOpen={isSidebarOpen} 
+          setIsSidebarOpen={setIsSidebarOpen} 
+        />
+        
         {/* Main content */}
-        <main className="p-6">
+        <main className="flex-1 p-6">
           {children}
         </main>
+      </div>
+      
+      {/* Dark Mode toggle (positioned absolute) */}
+      <div className="fixed bottom-4 right-4 z-50">
+        <DarkModeToggle />
       </div>
     </div>
   );
