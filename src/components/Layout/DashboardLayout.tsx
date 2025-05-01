@@ -47,12 +47,17 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   }
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
+    <div className="min-h-screen flex bg-background">
       {/* Sidebar - always shown on desktop, toggleable on mobile */}
-      <Sidebar expanded={isSidebarOpen} />
+      <div className={cn(
+        "transition-all duration-300 ease-in-out",
+        isSidebarOpen ? "block" : "hidden md:block"
+      )}>
+        <Sidebar expanded={true} />
+      </div>
 
       {/* Content area */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-screen">
         {/* Top navigation */}
         <Header 
           isSidebarOpen={isSidebarOpen} 
@@ -60,7 +65,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         />
         
         {/* Main content */}
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-6 overflow-auto">
           {children}
         </main>
       </div>

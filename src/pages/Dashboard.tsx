@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAppContext } from '@/context/AppContext';
@@ -42,7 +41,8 @@ const Dashboard = () => {
       // Use the vaccine field name that's actually in the record
       return {
         ...record,
-        batchName: batch?.name || 'Unknown Batch'
+        batchName: batch?.name || 'Unknown Batch',
+        vaccineName: record.vaccineId || 'Unknown Vaccine'
       };
     });
 
@@ -162,7 +162,7 @@ const Dashboard = () => {
                       <p className="text-muted-foreground text-xs">
                         Due on {new Date(vacc.nextScheduledDate || '').toLocaleDateString()}
                       </p>
-                      <p className="text-xs mt-1">{vacc.vaccineType || 'Vaccine'}</p>
+                      <p className="text-xs mt-1">{vacc.vaccineName}</p>
                     </div>
                   </li>
                 ))}

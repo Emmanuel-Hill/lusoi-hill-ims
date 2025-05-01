@@ -14,8 +14,8 @@ const WarehouseOverview: React.FC = () => {
       <Card className="shadow-sm">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
-              <Package className="h-4 w-4 text-gray-600" />
+            <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center">
+              <Package className="h-4 w-4 text-primary" />
             </div>
             Total Items
           </CardTitle>
@@ -31,8 +31,8 @@ const WarehouseOverview: React.FC = () => {
       <Card className="shadow-sm">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
-              <ArrowDown className="h-4 w-4 text-gray-600" />
+            <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center">
+              <ArrowDown className="h-4 w-4 text-primary" />
             </div>
             Received
           </CardTitle>
@@ -48,8 +48,8 @@ const WarehouseOverview: React.FC = () => {
       <Card className="shadow-sm">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
-              <ArrowUp className="h-4 w-4 text-gray-600" />
+            <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center">
+              <ArrowUp className="h-4 w-4 text-primary" />
             </div>
             Dispatched
           </CardTitle>
