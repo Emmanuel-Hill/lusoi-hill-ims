@@ -28,6 +28,8 @@ import { toast } from 'sonner';
 import EggCollectionList from '@/components/egg-collection/EggCollectionList';
 import EggCollectionForm from '@/components/egg-collection/EggCollectionForm';
 import { EggCollection } from '@/types';
+import ReportButton from '@/components/ReportButton';
+import { generateEggCollectionReport } from '@/utils/reportGenerator';
 
 const EggCollectionPage = () => {
   const { batches, eggCollections, addEggCollection } = useAppContext();
@@ -126,45 +128,61 @@ const EggCollectionPage = () => {
     toast.success('Egg collection recorded successfully');
   };
 
+  const handleGenerateReport = (format: 'excel' | 'pdf') => {
+    try {
+      generateEggCollectionReport(eggCollections, batches, format);
+      toast.success(`Egg collection report generated successfully (${format.toUpperCase()})`);
+    } catch (error) {
+      console.error('Error generating report:', error);
+      toast.error('Failed to generate report');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight">Egg Collection</h1>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Collection
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[550px]">
-            <DialogHeader>
-              <DialogTitle>Add Egg Collection</DialogTitle>
-              <DialogDescription>
-                Record a new egg collection entry.
-              </DialogDescription>
-            </DialogHeader>
-            <EggCollectionForm
-              form={form}
-              batches={batches}
-              date={date}
-              onInputChange={handleInputChange}
-              onDateSelect={handleDateSelect}
-              onBatchSelect={(e) => {
-                // Convert the value manually to make TypeScript happy
-                const syntheticEvent = {
-                  target: {
-                    name: "batchId",
-                    value: e
-                  }
-                } as unknown as React.ChangeEvent<HTMLInputElement>;
-                handleInputChange(syntheticEvent);
-              }}
-              onSubmit={handleSubmit}
-              onCancel={() => setIsDialogOpen(false)}
-            />
-          </DialogContent>
-        </Dialog>
+        <div className="flex gap-2">
+          <ReportButton 
+            onExcelExport={() => handleGenerateReport('excel')} 
+            onPdfExport={() => handleGenerateReport('pdf')} 
+          />
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Collection
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[550px]">
+              <DialogHeader>
+                <DialogTitle>Add Egg Collection</DialogTitle>
+                <DialogDescription>
+                  Record a new egg collection entry.
+                </DialogDescription>
+              </DialogHeader>
+              <EggCollectionForm
+                form={form}
+                batches={batches}
+                date={date}
+                onInputChange={handleInputChange}
+                onDateSelect={handleDateSelect}
+                onBatchSelect={(e) => {
+                  // Convert the value manually to make TypeScript happy
+                  const syntheticEvent = {
+                    target: {
+                      name: "batchId",
+                      value: e
+                    }
+                  } as unknown as React.ChangeEvent<HTMLInputElement>;
+                  handleInputChange(syntheticEvent);
+                }}
+                onSubmit={handleSubmit}
+                onCancel={() => setIsDialogOpen(false)}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <Card>

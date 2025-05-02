@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { mockData } from '@/data/mockData';
+import * as mockDataModule from '@/data/mockData';
 
 // Define the types for context
 export interface AppContextProps {
@@ -23,6 +23,31 @@ export interface AppContextProps {
     receiving: any[];
     dispatch: any[];
   };
+  addBatch: (batch: any) => void;
+  updateBatch: (batch: any) => void;
+  addEggCollection: (collection: any) => void;
+  addFeedType: (feedType: any) => void;
+  updateFeedType: (feedType: any) => void;
+  deleteFeedType: (feedTypeId: string) => void;
+  addFeedConsumption: (consumption: any) => void;
+  addFeedInventory: (inventory: any) => void;
+  addVaccine: (vaccine: any) => void;
+  addVaccinationRecord: (record: any) => void;
+  addCustomer: (customer: any) => void;
+  addOrder: (order: any) => void;
+  updateOrderStatus: (orderId: string, status: any) => void;
+  addProduct: (product: any) => void;
+  updateProductPrice: (productId: string, price: number) => void;
+  addSale: (sale: any) => void;
+  addUser: (user: any) => void;
+  updateUser: (user: any) => void;
+  deleteUser: (userId: string) => void;
+  logoutUser: () => void;
+  authenticateUser: (email: string, password: string) => boolean;
+  isInitialLogin: boolean;
+  setInitialLoginComplete: () => void;
+  changeUserPassword: (userId: string, newPassword: string) => void;
+  hasAccess: (module: string) => boolean;
 }
 
 // Create context with default values
@@ -45,34 +70,196 @@ const AppContext = createContext<AppContextProps>({
     inventory: [],
     receiving: [],
     dispatch: []
-  }
+  },
+  addBatch: () => {},
+  updateBatch: () => {},
+  addEggCollection: () => {},
+  addFeedType: () => {},
+  updateFeedType: () => {},
+  deleteFeedType: () => {},
+  addFeedConsumption: () => {},
+  addFeedInventory: () => {},
+  addVaccine: () => {},
+  addVaccinationRecord: () => {},
+  addCustomer: () => {},
+  addOrder: () => {},
+  updateOrderStatus: () => {},
+  addProduct: () => {},
+  updateProductPrice: () => {},
+  addSale: () => {},
+  addUser: () => {},
+  updateUser: () => {},
+  deleteUser: () => {},
+  logoutUser: () => {},
+  authenticateUser: () => false,
+  isInitialLogin: false,
+  setInitialLoginComplete: () => {},
+  changeUserPassword: () => {},
+  hasAccess: () => false,
 });
 
 // Create provider component
 export const AppProvider: React.FC<{children: ReactNode}> = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState(mockData.users[0] || null);
+  const [currentUser, setCurrentUser] = useState(mockDataModule.mockUsers[0] || null);
+  const [batches, setBatches] = useState(mockDataModule.mockBatches || []);
+  const [eggCollections, setEggCollections] = useState(mockDataModule.mockEggCollections || []);
+  const [feedConsumption, setFeedConsumption] = useState(mockDataModule.mockFeedConsumption || []);
+  const [feedInventory, setFeedInventory] = useState(mockDataModule.mockFeedInventory || []);
+  const [feedTypes, setFeedTypes] = useState(mockDataModule.mockFeedTypes || []);
+  const [vaccinationRecords, setVaccinationRecords] = useState(mockDataModule.mockVaccinationRecords || []);
+  const [vaccines, setVaccines] = useState(mockDataModule.mockVaccines || []);
+  const [sales, setSales] = useState(mockDataModule.mockSales || []);
+  const [products, setProducts] = useState(mockDataModule.mockProducts || []);
+  const [customers, setCustomers] = useState(mockDataModule.mockCustomers || []);
+  const [orders, setOrders] = useState(mockDataModule.mockOrders || []);
+  const [isInitialLogin, setIsInitialLogin] = useState(false);
+
+  // CRUD operations
+  const addBatch = (batch: any) => {
+    setBatches([...batches, batch]);
+  };
+
+  const updateBatch = (updatedBatch: any) => {
+    setBatches(batches.map(batch => batch.id === updatedBatch.id ? updatedBatch : batch));
+  };
+
+  const addEggCollection = (collection: any) => {
+    setEggCollections([...eggCollections, collection]);
+  };
+
+  const addFeedType = (feedType: any) => {
+    setFeedTypes([...feedTypes, feedType]);
+  };
+
+  const updateFeedType = (updatedFeedType: any) => {
+    setFeedTypes(feedTypes.map(type => type.id === updatedFeedType.id ? updatedFeedType : type));
+  };
+
+  const deleteFeedType = (feedTypeId: string) => {
+    setFeedTypes(feedTypes.filter(type => type.id !== feedTypeId));
+  };
+
+  const addFeedConsumption = (consumption: any) => {
+    setFeedConsumption([...feedConsumption, consumption]);
+  };
+
+  const addFeedInventory = (inventory: any) => {
+    setFeedInventory([...feedInventory, inventory]);
+  };
+
+  const addVaccine = (vaccine: any) => {
+    setVaccines([...vaccines, vaccine]);
+  };
+
+  const addVaccinationRecord = (record: any) => {
+    setVaccinationRecords([...vaccinationRecords, record]);
+  };
+
+  const addCustomer = (customer: any) => {
+    setCustomers([...customers, customer]);
+  };
+
+  const addOrder = (order: any) => {
+    setOrders([...orders, order]);
+  };
+
+  const updateOrderStatus = (orderId: string, status: any) => {
+    setOrders(orders.map(order => order.id === orderId ? { ...order, status } : order));
+  };
+
+  const addProduct = (product: any) => {
+    setProducts([...products, product]);
+  };
+
+  const updateProductPrice = (productId: string, price: number) => {
+    setProducts(products.map(product => product.id === productId ? { ...product, currentPrice: price, priceUpdatedAt: new Date().toISOString() } : product));
+  };
+
+  const addSale = (sale: any) => {
+    setSales([...sales, sale]);
+  };
+
+  const addUser = (user: any) => {
+    // Handle user addition
+  };
+
+  const updateUser = (user: any) => {
+    // Handle user update
+  };
+
+  const deleteUser = (userId: string) => {
+    // Handle user deletion
+  };
+
+  const logoutUser = () => {
+    // Handle logout
+  };
+
+  const authenticateUser = (email: string, password: string) => {
+    // Mock authentication
+    return true;
+  };
+
+  const setInitialLoginComplete = () => {
+    setIsInitialLogin(false);
+  };
+
+  const changeUserPassword = (userId: string, newPassword: string) => {
+    // Handle password change
+  };
+
+  const hasAccess = (module: string) => {
+    // Check if user has access to a module
+    if (!currentUser || !currentUser.moduleAccess) return false;
+    return currentUser.moduleAccess[module] || false;
+  };
 
   // Context value
   const value: AppContextProps = {
-    users: mockData.users,
+    users: mockDataModule.mockUsers,
     currentUser,
     setCurrentUser,
-    batches: mockData.batches,
-    eggCollections: mockData.eggCollections,
-    feedConsumption: mockData.feedConsumption,
-    feedInventory: mockData.feedInventory,
-    feedTypes: mockData.feedTypes,
-    vaccinationRecords: mockData.vaccinationRecords,
-    vaccines: mockData.vaccines,
-    sales: mockData.sales,
-    products: mockData.products,
-    customers: mockData.customers,
-    orders: mockData.orders,
-    warehouse: mockData.warehouse || {
+    batches,
+    eggCollections,
+    feedConsumption,
+    feedInventory,
+    feedTypes,
+    vaccinationRecords,
+    vaccines,
+    sales,
+    products,
+    customers,
+    orders,
+    warehouse: mockDataModule.mockWarehouse || {
       inventory: [],
       receiving: [],
       dispatch: []
-    }
+    },
+    addBatch,
+    updateBatch,
+    addEggCollection,
+    addFeedType,
+    updateFeedType,
+    deleteFeedType,
+    addFeedConsumption,
+    addFeedInventory,
+    addVaccine,
+    addVaccinationRecord,
+    addCustomer,
+    addOrder,
+    updateOrderStatus,
+    addProduct,
+    updateProductPrice,
+    addSale,
+    addUser,
+    updateUser,
+    deleteUser,
+    logoutUser,
+    authenticateUser,
+    isInitialLogin,
+    setInitialLoginComplete,
+    changeUserPassword,
+    hasAccess
   };
 
   return (

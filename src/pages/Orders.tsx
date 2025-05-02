@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import {
@@ -20,6 +19,8 @@ import OrdersList from '@/components/orders/OrdersList';
 import OrderForm from '@/components/orders/OrderForm';
 import EditOrderStatusForm from '@/components/orders/EditOrderStatusForm';
 import { Order, OrderItem } from '@/types';
+import ReportButton from '@/components/ReportButton';
+import { generateCustomerReport } from '@/utils/reportGenerator';
 
 const Orders = () => {
   const { customers, products, orders, addOrder, updateOrderStatus } = useAppContext();
@@ -162,35 +163,51 @@ const Orders = () => {
     toast.success('Order status updated successfully');
   };
 
+  const handleGenerateReport = (format: 'excel' | 'pdf') => {
+    try {
+      generateCustomerReport(customers, [], orders, format);
+      toast.success(`Orders report generated successfully (${format.toUpperCase()})`);
+    } catch (error) {
+      console.error('Error generating report:', error);
+      toast.error('Failed to generate report');
+    }
+  };
+  
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight">Order Management</h1>
-        <Dialog open={isAddOrderDialogOpen} onOpenChange={setIsAddOrderDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              New Order
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[700px]">
-            <OrderForm
-              orderForm={orderForm}
-              orderItem={orderItem}
-              customers={customers}
-              products={products}
-              onOrderFormChange={handleOrderFormChange}
-              onCustomerChange={(customerId) => setOrderForm({ ...orderForm, customerId })}
-              onStatusChange={(status) => setOrderForm({ ...orderForm, status })}
-              onProductSelect={(productId) => setOrderItem({ ...orderItem, productId })}
-              onQuantityChange={(e) => setOrderItem({ ...orderItem, quantity: parseInt(e.target.value) || 0 })}
-              onAddToOrder={handleAddToOrder}
-              onRemoveProduct={removeProductFromOrder}
-              onSubmit={handleCreateOrder}
-              onCancel={() => setIsAddOrderDialogOpen(false)}
-            />
-          </DialogContent>
-        </Dialog>
+        <div className="flex gap-2">
+          <ReportButton
+            onExcelExport={() => handleGenerateReport('excel')}
+            onPdfExport={() => handleGenerateReport('pdf')}
+          />
+          <Dialog open={isAddOrderDialogOpen} onOpenChange={setIsAddOrderDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                New Order
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[700px]">
+              <OrderForm
+                orderForm={orderForm}
+                orderItem={orderItem}
+                customers={customers}
+                products={products}
+                onOrderFormChange={handleOrderFormChange}
+                onCustomerChange={(customerId) => setOrderForm({ ...orderForm, customerId })}
+                onStatusChange={(status) => setOrderForm({ ...orderForm, status })}
+                onProductSelect={(productId) => setOrderItem({ ...orderItem, productId })}
+                onQuantityChange={(e) => setOrderItem({ ...orderItem, quantity: parseInt(e.target.value) || 0 })}
+                onAddToOrder={handleAddToOrder}
+                onRemoveProduct={removeProductFromOrder}
+                onSubmit={handleCreateOrder}
+                onCancel={() => setIsAddOrderDialogOpen(false)}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <Card>

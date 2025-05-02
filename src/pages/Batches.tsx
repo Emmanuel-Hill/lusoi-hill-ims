@@ -39,6 +39,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
+import ReportButton from '@/components/ReportButton';
+import { generateBatchReport } from '@/utils/reportGenerator';
 
 const Batches = () => {
   const { batches, addBatch, updateBatch } = useAppContext();
@@ -133,82 +135,98 @@ const Batches = () => {
     toast.success('Batch updated successfully');
   };
 
+  const handleGenerateReport = (format: 'excel' | 'pdf') => {
+    try {
+      generateBatchReport(batches, format);
+      toast.success(`Batch report generated successfully (${format.toUpperCase()})`);
+    } catch (error) {
+      console.error('Error generating report:', error);
+      toast.error('Failed to generate report');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight">Batch Management</h1>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Batch
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Add New Batch</DialogTitle>
-              <DialogDescription>
-                Create a new batch of birds
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">Name</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={batchForm.name}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="birdCount" className="text-right">Bird Count</Label>
-                <Input
-                  id="birdCount"
-                  name="birdCount"
-                  type="number"
-                  value={batchForm.birdCount}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="batchStatus" className="text-right">Batch Status</Label>
-                <select
-                  id="batchStatus"
-                  name="batchStatus"
-                  value={batchForm.batchStatus}
-                  onChange={(e) => handleStatusChange(e.target.value as 'New' | 'Laying' | 'Not Laying' | 'Retired')}
-                  className="col-span-3 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                >
-                  <option value="New">New</option>
-                  <option value="Laying">Laying</option>
-                  <option value="Not Laying">Not Laying</option>
-                  <option value="Retired">Retired</option>
-                </select>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="notes" className="text-right">Notes</Label>
-                <Textarea
-                  id="notes"
-                  name="notes"
-                  value={batchForm.notes}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleAddBatch}>
+        <div className="flex gap-2">
+          <ReportButton 
+            onExcelExport={() => handleGenerateReport('excel')} 
+            onPdfExport={() => handleGenerateReport('pdf')} 
+          />
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
                 Add Batch
               </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Add New Batch</DialogTitle>
+                <DialogDescription>
+                  Create a new batch of birds
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="name" className="text-right">Name</Label>
+                  <Input
+                    id="name"
+                    name="name"
+                    value={batchForm.name}
+                    onChange={handleInputChange}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="birdCount" className="text-right">Bird Count</Label>
+                  <Input
+                    id="birdCount"
+                    name="birdCount"
+                    type="number"
+                    value={batchForm.birdCount}
+                    onChange={handleInputChange}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="batchStatus" className="text-right">Batch Status</Label>
+                  <select
+                    id="batchStatus"
+                    name="batchStatus"
+                    value={batchForm.batchStatus}
+                    onChange={(e) => handleStatusChange(e.target.value as 'New' | 'Laying' | 'Not Laying' | 'Retired')}
+                    className="col-span-3 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  >
+                    <option value="New">New</option>
+                    <option value="Laying">Laying</option>
+                    <option value="Not Laying">Not Laying</option>
+                    <option value="Retired">Retired</option>
+                  </select>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="notes" className="text-right">Notes</Label>
+                  <Textarea
+                    id="notes"
+                    name="notes"
+                    value={batchForm.notes}
+                    onChange={handleInputChange}
+                    className="col-span-3"
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleAddBatch}>
+                  Add Batch
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <Card>

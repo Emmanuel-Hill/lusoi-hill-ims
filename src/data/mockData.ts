@@ -219,3 +219,17 @@ export const mockUsers: User[] = [
     initialLoginComplete: true,
   },
 ];
+
+// Mock data for Warehouse Management
+export const mockWarehouse = {
+  inventory: [
+    { id: '1', productId: '1', quantity: 1000, lastUpdated: '2023-11-01' },
+    { id: '2', productId: '2', quantity: 200, lastUpdated: '2023-11-01' }
+  ],
+  receiving: [
+    { id: '1', productId: '1', quantity: 500, date: '2023-11-01', source: 'Farm Production' }
+  ],
+  dispatch: [
+    { id: '1', productId: '1', quantity: 100, date: '2023-11-02', destination: 'Market' }
+  ]
+};

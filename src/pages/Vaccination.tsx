@@ -15,15 +15,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from '@/components/ui/dialog';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -36,10 +30,18 @@ import {
 } from '@/components/ui/select';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
-import { formatDistanceToNow } from 'date-fns';
+import { addDays, format } from 'date-fns';
+import ReportButton from '@/components/ReportButton';
+import { generateVaccinationReport } from '@/utils/reportGenerator';
 
 const Vaccination = () => {
-  const { batches, vaccines, vaccinationRecords, addVaccine, addVaccinationRecord } = useAppContext();
+  const {
+    batches,
+    vaccines,
+    vaccinationRecords,
+    addVaccine,
+    addVaccinationRecord
+  } = useAppContext();
 
   const [isVaccineDialogOpen, setIsVaccineDialogOpen] = useState(false);
   const [isRecordDialogOpen, setIsRecordDialogOpen] = useState(false);
@@ -47,14 +49,13 @@ const Vaccination = () => {
   const [vaccineForm, setVaccineForm] = useState({
     name: '',
     description: '',
-    intervalDays: 0,
+    intervalDays: 30,
   });
 
   const [recordForm, setRecordForm] = useState({
     batchId: '',
     vaccineId: '',
     date: new Date().toISOString().split('T')[0],
-    nextScheduledDate: '',
     notes: '',
   });
 
@@ -81,7 +82,7 @@ const Vaccination = () => {
     }
 
     addVaccine({
-      id: crypto.randomUUID(), // Add id
+      id: crypto.randomUUID(),
       name: vaccineForm.name,
       description: vaccineForm.description,
       intervalDays: vaccineForm.intervalDays,
@@ -90,7 +91,7 @@ const Vaccination = () => {
     setVaccineForm({
       name: '',
       description: '',
-      intervalDays: 0,
+      intervalDays: 30,
     });
 
     setIsVaccineDialogOpen(false);
@@ -103,20 +104,24 @@ const Vaccination = () => {
       return;
     }
 
+    const selectedVaccine = vaccines.find(v => v.id === recordForm.vaccineId);
+    const nextScheduledDate = selectedVaccine && selectedVaccine.intervalDays
+      ? format(addDays(new Date(recordForm.date), selectedVaccine.intervalDays), 'yyyy-MM-dd')
+      : undefined;
+
     addVaccinationRecord({
-      id: crypto.randomUUID(), // Add id
+      id: crypto.randomUUID(),
       batchId: recordForm.batchId,
       vaccineId: recordForm.vaccineId,
       date: recordForm.date,
-      nextScheduledDate: recordForm.nextScheduledDate,
       notes: recordForm.notes,
+      nextScheduledDate: nextScheduledDate,
     });
 
     setRecordForm({
       batchId: '',
       vaccineId: '',
       date: new Date().toISOString().split('T')[0],
-      nextScheduledDate: '',
       notes: '',
     });
 
@@ -124,201 +129,194 @@ const Vaccination = () => {
     toast.success('Vaccination record added successfully');
   };
 
+  const handleGenerateReport = (format: 'excel' | 'pdf') => {
+    try {
+      generateVaccinationReport(vaccinationRecords, vaccines, batches, format);
+      toast.success(`Vaccination report generated successfully (${format.toUpperCase()})`);
+    } catch (error) {
+      console.error('Error generating report:', error);
+      toast.error('Failed to generate report');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight">Vaccination Management</h1>
-        <div className="flex gap-2">
-          <Dialog open={isVaccineDialogOpen} onOpenChange={setIsVaccineDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Vaccine
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
-              <DialogHeader>
-                <DialogTitle>Add New Vaccine</DialogTitle>
-                <DialogDescription>
-                  Enter details for the new vaccine
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="name" className="text-right">Name</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    value={vaccineForm.name}
-                    onChange={handleVaccineChange}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="description" className="text-right">Description</Label>
-                  <Textarea
-                    id="description"
-                    name="description"
-                    value={vaccineForm.description}
-                    onChange={handleVaccineChange}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="intervalDays" className="text-right">Interval (Days)</Label>
-                  <Input
-                    id="intervalDays"
-                    name="intervalDays"
-                    type="number"
-                    value={vaccineForm.intervalDays}
-                    onChange={handleVaccineChange}
-                    className="col-span-3"
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end">
-                <Button variant="outline" onClick={() => setIsVaccineDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleAddVaccine}>
-                  Add Vaccine
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-          <Dialog open={isRecordDialogOpen} onOpenChange={setIsRecordDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Record
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
-              <DialogHeader>
-                <DialogTitle>Add New Vaccination Record</DialogTitle>
-                <DialogDescription>
-                  Record a new vaccination for a batch
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="batchId" className="text-right">Batch</Label>
-                  <Select onValueChange={(value) => setRecordForm({ ...recordForm, batchId: value })}>
-                    <SelectTrigger className="col-span-3">
-                      <SelectValue placeholder="Select a batch" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {batches.map((batch) => (
-                        <SelectItem key={batch.id} value={batch.id}>{batch.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="vaccineId" className="text-right">Vaccine</Label>
-                  <Select onValueChange={(value) => setRecordForm({ ...recordForm, vaccineId: value })}>
-                    <SelectTrigger className="col-span-3">
-                      <SelectValue placeholder="Select a vaccine" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {vaccines.map((vaccine) => (
-                        <SelectItem key={vaccine.id} value={vaccine.id}>{vaccine.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="date" className="text-right">Date</Label>
-                  <Input
-                    id="date"
-                    name="date"
-                    type="date"
-                    value={recordForm.date}
-                    onChange={handleRecordChange}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="nextScheduledDate" className="text-right">Next Scheduled Date</Label>
-                  <Input
-                    id="nextScheduledDate"
-                    name="nextScheduledDate"
-                    type="date"
-                    value={recordForm.nextScheduledDate}
-                    onChange={handleRecordChange}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="notes" className="text-right">Notes</Label>
-                  <Textarea
-                    id="notes"
-                    name="notes"
-                    value={recordForm.notes}
-                    onChange={handleRecordChange}
-                    className="col-span-3"
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end">
-                <Button variant="outline" onClick={() => setIsRecordDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleAddRecord}>
-                  Add Record
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
+        <ReportButton 
+          onExcelExport={() => handleGenerateReport('excel')} 
+          onPdfExport={() => handleGenerateReport('pdf')} 
+        />
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Vaccination Records</CardTitle>
-          <CardDescription>Manage vaccination records for your batches</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Batch</TableHead>
-                <TableHead>Vaccine</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Next Scheduled Date</TableHead>
-                <TableHead>Last Activity</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {vaccinationRecords.length > 0 ? (
-                vaccinationRecords.map((record) => (
-                  <TableRow key={record.id}>
-                    <TableCell>
-                      {batches.find(batch => batch.id === record.batchId)?.name || 'Unknown'}
-                    </TableCell>
-                    <TableCell>
-                      {vaccines.find(vaccine => vaccine.id === record.vaccineId)?.name || 'Unknown'}
-                    </TableCell>
-                    <TableCell>{record.date}</TableCell>
-                    <TableCell>{record.nextScheduledDate || '-'}</TableCell>
-                    <TableCell>
-                      {formatDistanceToNow(new Date(record.date), {
-                        addSuffix: true,
-                      })}
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">
-                    No vaccination records added yet.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="records" className="w-full">
+        <TabsList className="grid grid-cols-2 w-full mb-4">
+          <TabsTrigger value="records">Records</TabsTrigger>
+          <TabsTrigger value="vaccines">Vaccines</TabsTrigger>
+        </TabsList>
+
+        {/* Records Tab */}
+        <TabsContent value="records" className="space-y-4">
+          <div className="flex justify-end">
+            <Dialog open={isRecordDialogOpen} onOpenChange={setIsRecordDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Record
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Add New Vaccination Record</DialogTitle>
+                  <DialogDescription>
+                    Record a new vaccination for a batch of birds.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="batchId" className="text-right">Batch</Label>
+                    <Select onValueChange={(value) => setRecordForm({ ...recordForm, batchId: value })}>
+                      <SelectTrigger className="col-span-3">
+                        <SelectValue placeholder="Select batch" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {batches.map((batch) => (
+                          <SelectItem key={batch.id} value={batch.id}>{batch.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="vaccineId" className="text-right">Vaccine</Label>
+                    <Select onValueChange={(value) => setRecordForm({ ...recordForm, vaccineId: value })}>
+                      <SelectTrigger className="col-span-3">
+                        <SelectValue placeholder="Select vaccine" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {vaccines.map((vaccine) => (
+                          <SelectItem key={vaccine.id} value={vaccine.id}>{vaccine.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="date" className="text-right">Date</Label>
+                    <Input
+                      id="date"
+                      name="date"
+                      type="date"
+                      value={recordForm.date}
+                      onChange={handleRecordChange}
+                      className="col-span-3"
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="notes" className="text-right">Notes</Label>
+                    <Textarea
+                      id="notes"
+                      name="notes"
+                      value={recordForm.notes}
+                      onChange={handleRecordChange}
+                      className="col-span-3"
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsRecordDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleAddRecord}>
+                    Add Record
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Vaccination Records</CardTitle>
+              <CardDescription>Manage vaccination records for your batches</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {/* Vaccination Records Table */}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Vaccines Tab */}
+        <TabsContent value="vaccines" className="space-y-4">
+          <div className="flex justify-end">
+            <Dialog open={isVaccineDialogOpen} onOpenChange={setIsVaccineDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Vaccine
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Add New Vaccine</DialogTitle>
+                  <DialogDescription>
+                    Add a new vaccine to the list of available vaccines.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="name" className="text-right">Name</Label>
+                    <Input
+                      id="name"
+                      name="name"
+                      value={vaccineForm.name}
+                      onChange={handleVaccineChange}
+                      className="col-span-3"
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="description" className="text-right">Description</Label>
+                    <Textarea
+                      id="description"
+                      name="description"
+                      value={vaccineForm.description}
+                      onChange={handleVaccineChange}
+                      className="col-span-3"
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="intervalDays" className="text-right">Interval (Days)</Label>
+                    <Input
+                      id="intervalDays"
+                      name="intervalDays"
+                      type="number"
+                      value={vaccineForm.intervalDays}
+                      onChange={handleVaccineChange}
+                      className="col-span-3"
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsVaccineDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleAddVaccine}>
+                    Add Vaccine
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Vaccines</CardTitle>
+              <CardDescription>Manage the list of available vaccines</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {/* Vaccines Table */}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

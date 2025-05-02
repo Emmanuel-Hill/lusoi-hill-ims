@@ -8,16 +8,12 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus } from 'lucide-react';
+import { toast } from 'sonner';
+import { generateFeedManagementReport } from '@/utils/reportGenerator';
+import ReportButton from '@/components/ReportButton';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -36,8 +32,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus } from 'lucide-react';
-import { toast } from 'sonner';
 import { FeedType, FeedConsumption, FeedInventory } from '@/types';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -194,9 +188,25 @@ const FeedManagement = () => {
     return batch ? batch.name : 'Unknown Batch';
   };
 
+  const handleGenerateReport = (format: 'excel' | 'pdf') => {
+    try {
+      generateFeedManagementReport(feedConsumption, feedInventory, feedTypes, batches, format);
+      toast.success(`Feed management report generated successfully (${format.toUpperCase()})`);
+    } catch (error) {
+      console.error('Error generating report:', error);
+      toast.error('Failed to generate report');
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">Feed Management</h1>
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold tracking-tight">Feed Management</h1>
+        <ReportButton 
+          onExcelExport={() => handleGenerateReport('excel')} 
+          onPdfExport={() => handleGenerateReport('pdf')} 
+        />
+      </div>
 
       <Tabs defaultValue="feed-types" className="w-full">
         <TabsList className="grid grid-cols-3 w-full mb-4">
