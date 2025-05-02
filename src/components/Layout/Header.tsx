@@ -13,7 +13,6 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import UserMenu from '../Navigation/UserMenu';
-import ReportGenerator from '../ReportGenerator';
 
 interface HeaderProps {
   isSidebarOpen: boolean;
@@ -48,9 +47,6 @@ const Header: React.FC<HeaderProps> = ({ isSidebarOpen, setIsSidebarOpen }) => {
         </div>
         
         <div className="flex items-center space-x-4">
-          {/* Report Generator Button */}
-          <ReportGenerator />
-          
           {/* User info - desktop view */}
           <div className="hidden md:flex items-center border-r border-gray-200 pr-4">
             <div className="text-right mr-2">

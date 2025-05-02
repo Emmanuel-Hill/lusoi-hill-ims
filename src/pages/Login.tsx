@@ -40,7 +40,9 @@ const Login = () => {
         });
         
         // Check if it's initial login
-        if (isInitialLogin(user.id)) {
+        // Fixed: Ensure user is a valid object before accessing properties
+        const isFirstLogin = user && isInitialLogin && typeof isInitialLogin === 'function' ? isInitialLogin(user.id) : false;
+        if (isFirstLogin) {
           navigate('/change-password');
         } else {
           navigate('/');

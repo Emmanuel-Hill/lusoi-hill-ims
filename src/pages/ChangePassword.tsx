@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import {
@@ -41,8 +42,10 @@ const ChangePassword = () => {
     }
 
     if (currentUser) {
-      const changed = changeUserPassword(currentUser.id, oldPassword, newPassword);
-      if (changed) {
+      // Fixed error: Changed to accept only two parameters
+      const changed = changeUserPassword(oldPassword, newPassword);
+      // Fixed error: Check if changed is true directly
+      if (changed === true) {
         setSuccess('Password changed successfully');
         setOldPassword('');
         setNewPassword('');

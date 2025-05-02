@@ -1,7 +1,7 @@
 
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import 'jspdf-autotable';
 import { format } from 'date-fns';
 import { getFileName } from './formatHelpers';
 
@@ -29,7 +29,7 @@ export const downloadPdfFile = (
   doc.text(`Generated on: ${format(new Date(), 'PPpp')}`, 14, 30);
   
   // Create table
-  autoTable(doc, {
+  (doc as any).autoTable({
     head: [columns],
     body: data.map(item => columns.map(col => item[col] || '-')),
     startY: 40,
@@ -72,7 +72,7 @@ export const createMultiSectionPdfReport = (
     doc.setFontSize(14);
     doc.text(section.title, 14, yPos);
     
-    autoTable(doc, {
+    (doc as any).autoTable({
       head: [section.columns],
       body: section.data.map(item => section.columns.map(col => item[col] || '-')),
       startY: yPos + 10,
