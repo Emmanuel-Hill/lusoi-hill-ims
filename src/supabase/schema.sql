@@ -1,4 +1,3 @@
-
 -- Create schema for poultry farm management system
 -- Note: Run this SQL in your Supabase SQL Editor
 
@@ -33,6 +32,17 @@ CREATE TABLE IF NOT EXISTS module_access (
   reports BOOLEAN DEFAULT FALSE,
   user_management BOOLEAN DEFAULT FALSE,
   warehouse BOOLEAN DEFAULT FALSE
+);
+
+-- USER PREFERENCES TABLE
+CREATE TABLE IF NOT EXISTS user_preferences (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  theme TEXT DEFAULT 'light',
+  language TEXT DEFAULT 'en',
+  notifications_enabled BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- BATCHES TABLE
@@ -173,10 +183,24 @@ CREATE TABLE IF NOT EXISTS order_items (
   quantity INTEGER NOT NULL
 );
 
+-- REPORT SETTINGS TABLE
+CREATE TABLE IF NOT EXISTS report_settings (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  module_name TEXT NOT NULL,
+  enabled BOOLEAN DEFAULT TRUE,
+  default_format TEXT DEFAULT 'pdf' CHECK (default_format IN ('pdf', 'excel', 'csv')),
+  include_header BOOLEAN DEFAULT TRUE,
+  include_footer BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Add Row Level Security (RLS) policies
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE module_access ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_preferences ENABLE ROW LEVEL SECURITY;
 ALTER TABLE batches ENABLE ROW LEVEL SECURITY;
+ALTER TABLE report_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE egg_collections ENABLE ROW LEVEL SECURITY;
 ALTER TABLE feed_types ENABLE ROW LEVEL SECURITY;
 ALTER TABLE feed_inventory ENABLE ROW LEVEL SECURITY;

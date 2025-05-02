@@ -44,14 +44,16 @@ const ChangePassword = () => {
     if (currentUser) {
       // Fixed error: Changed to accept only two parameters
       const changed = changeUserPassword(oldPassword, newPassword);
-      // Fixed error: Check if changed is true directly
+      // Fixed error: Using === true for proper comparison
       if (changed === true) {
         setSuccess('Password changed successfully');
         setOldPassword('');
         setNewPassword('');
         setConfirmPassword('');
+        toast.success('Password changed successfully');
       } else {
         setError('Current password is incorrect');
+        toast.error('Current password is incorrect');
       }
     }
   };
