@@ -7,7 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { FileExcel, FilePdf } from 'lucide-react';
+import { FileText, Download } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ReportButtonProps {
@@ -41,17 +41,17 @@ const ReportButton = ({ onExcelExport, onPdfExport, label = "Reports" }: ReportB
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" className="gap-2">
-          <FileExcel className="h-4 w-4" />
+          <Download className="h-4 w-4" />
           {label}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         <DropdownMenuItem onClick={handleExcelExport}>
-          <FileExcel className="mr-2 h-4 w-4" />
+          <FileText className="mr-2 h-4 w-4" />
           Export to Excel
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handlePdfExport}>
-          <FilePdf className="mr-2 h-4 w-4" />
+          <FileText className="mr-2 h-4 w-4" />
           Export to PDF
         </DropdownMenuItem>
       </DropdownMenuContent>
