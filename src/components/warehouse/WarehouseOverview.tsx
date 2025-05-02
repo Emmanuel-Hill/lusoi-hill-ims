@@ -7,8 +7,16 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Package, ArrowDown, ArrowUp } from 'lucide-react';
+import { useAppContext } from '@/context/AppContext';
 
 const WarehouseOverview: React.FC = () => {
+  const { warehouse } = useAppContext();
+  
+  // Calculate totals from warehouse data
+  const totalItems = warehouse?.inventory?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+  const receivedItems = warehouse?.receiving?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+  const dispatchedItems = warehouse?.dispatch?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+  
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
       <Card className="shadow-sm bg-white border border-gray-200">
@@ -21,7 +29,7 @@ const WarehouseOverview: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-bold text-black">0</div>
+          <div className="text-3xl font-bold text-black">{totalItems}</div>
           <p className="text-xs text-gray-500 mt-1">
             items in stock
           </p>
@@ -38,7 +46,7 @@ const WarehouseOverview: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-bold text-black">0</div>
+          <div className="text-3xl font-bold text-black">{receivedItems}</div>
           <p className="text-xs text-gray-500 mt-1">
             items this month
           </p>
@@ -55,7 +63,7 @@ const WarehouseOverview: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-bold text-black">0</div>
+          <div className="text-3xl font-bold text-black">{dispatchedItems}</div>
           <p className="text-xs text-gray-500 mt-1">
             items this month
           </p>
