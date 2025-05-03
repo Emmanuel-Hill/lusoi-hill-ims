@@ -6,4 +6,6 @@ export interface CalendarEvent {
   type: EventType;
   title: string;
   detail: string;
+  duration?: string;  // Added this property
+  notes?: string;     // Added this property
 }

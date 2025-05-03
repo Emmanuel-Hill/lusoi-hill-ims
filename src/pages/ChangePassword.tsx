@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import {
@@ -42,10 +41,9 @@ const ChangePassword = () => {
     }
 
     if (currentUser) {
-      // Fixed error: Changed to accept only two parameters
       const changed = changeUserPassword(oldPassword, newPassword);
-      // Fixed error: Using === true for proper comparison
-      if (changed === true) {
+      
+      if (changed) {
         setSuccess('Password changed successfully');
         setOldPassword('');
         setNewPassword('');
