@@ -33,18 +33,20 @@ const Login = () => {
     setTimeout(() => {
       const user = authenticateUser(email, password);
       
-      // Check that user exists and is an object (not just a boolean)
+      // Check if user exists and is an object
       if (user && typeof user === 'object' && 'name' in user) {
         toast({
           title: "Login successful",
           description: `Welcome, ${user.name}!`,
         });
         
-        // Check if it's initial login - ensure isInitialLogin is a function and user.id exists
+        // Check if it's initial login
         if (typeof isInitialLogin === 'function' && user.id) {
-          const initialLogin = isInitialLogin(user.id);
-          // Check if initialLogin is boolean true
-          if (initialLogin === true) {
+          // Call isInitialLogin with the user ID
+          const initialLoginStatus = isInitialLogin(user.id);
+          
+          // Check if initialLoginStatus is true
+          if (initialLoginStatus === true) {
             navigate('/change-password');
           } else {
             navigate('/');

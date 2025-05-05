@@ -42,17 +42,17 @@ const ChangePassword = () => {
     }
 
     if (currentUser) {
-      // Call changeUserPassword and explicitly check if it returns true
-      const result = changeUserPassword(oldPassword, newPassword);
-      
-      // Handle the result based on explicit boolean check
-      if (result === true) {
+      try {
+        // Call changeUserPassword without checking its return value directly
+        changeUserPassword(oldPassword, newPassword);
+        
+        // If no exception is thrown, assume success
         setSuccess('Password changed successfully');
         setOldPassword('');
         setNewPassword('');
         setConfirmPassword('');
         toast.success('Password changed successfully');
-      } else {
+      } catch (err) {
         setError('Current password is incorrect');
         toast.error('Current password is incorrect');
       }

@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import * as mockDataModule from '@/data/mockData';
 
@@ -43,10 +42,10 @@ export interface AppContextProps {
   updateUser: (user: any) => void;
   deleteUser: (userId: string) => void;
   logoutUser: () => void;
-  authenticateUser: (email: string, password: string) => boolean;
-  isInitialLogin: boolean;
+  authenticateUser: (email: string, password: string) => any; // Changed return type to any
+  isInitialLogin: (userId: string) => boolean; // Changed to function with parameter
   setInitialLoginComplete: () => void;
-  changeUserPassword: (userId: string, newPassword: string) => void;
+  changeUserPassword: (oldPassword: string, newPassword: string) => void; // Changed parameters
   hasAccess: (module: string) => boolean;
 }
 
@@ -92,7 +91,7 @@ const AppContext = createContext<AppContextProps>({
   deleteUser: () => {},
   logoutUser: () => {},
   authenticateUser: () => false,
-  isInitialLogin: false,
+  isInitialLogin: () => false,
   setInitialLoginComplete: () => {},
   changeUserPassword: () => {},
   hasAccess: () => false,
@@ -112,7 +111,7 @@ export const AppProvider: React.FC<{children: ReactNode}> = ({ children }) => {
   const [products, setProducts] = useState(mockDataModule.mockProducts || []);
   const [customers, setCustomers] = useState(mockDataModule.mockCustomers || []);
   const [orders, setOrders] = useState(mockDataModule.mockOrders || []);
-  const [isInitialLogin, setIsInitialLogin] = useState(false);
+  const [isInitialLoginState, setIsInitialLoginState] = useState(false);
 
   // CRUD operations
   const addBatch = (batch: any) => {
@@ -195,20 +194,35 @@ export const AppProvider: React.FC<{children: ReactNode}> = ({ children }) => {
     // Handle logout
   };
 
+  // Authentication functions
   const authenticateUser = (email: string, password: string) => {
-    // Mock authentication
-    return true;
+    // Mock authentication - in a real app, you would verify credentials
+    const user = mockDataModule.mockUsers.find(
+      (u) => u.email === email && u.password === password
+    );
+    
+    return user || null;
+  };
+
+  const isInitialLogin = (userId: string): boolean => {
+    // Check if this is the user's first login
+    const user = mockDataModule.mockUsers.find(u => u.id === userId);
+    return user ? !user.initialLoginComplete : false;
   };
 
   const setInitialLoginComplete = () => {
-    setIsInitialLogin(false);
+    setIsInitialLoginState(false);
   };
 
-  const changeUserPassword = (userId: string, newPassword: string) => {
-    // Handle password change
+  const changeUserPassword = (oldPassword: string, newPassword: string): void => {
+    // Here you would implement the password change logic
+    // For now, we're just mocking the behavior
+    console.log("Password changed from", oldPassword, "to", newPassword);
+    
+    // This is a void function, it doesn't return a value
   };
 
-  const hasAccess = (module: string) => {
+  const hasAccess = (module: string): boolean => {
     // Check if user has access to a module
     if (!currentUser || !currentUser.moduleAccess) return false;
     return currentUser.moduleAccess[module] || false;
