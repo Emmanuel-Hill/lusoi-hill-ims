@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAppContext } from '@/context/AppContext';
@@ -32,15 +33,17 @@ const Login = () => {
     setTimeout(() => {
       const user = authenticateUser(email, password);
       
-      if (user && typeof user === 'object') {
+      // Check that user exists and is an object (not just a boolean)
+      if (user && typeof user === 'object' && 'name' in user) {
         toast({
           title: "Login successful",
           description: `Welcome, ${user.name}!`,
         });
         
-        // Check if it's initial login
+        // Check if it's initial login - ensure isInitialLogin is a function and user.id exists
         if (typeof isInitialLogin === 'function' && user.id) {
           const initialLogin = isInitialLogin(user.id);
+          // Check if initialLogin is boolean true
           if (initialLogin === true) {
             navigate('/change-password');
           } else {

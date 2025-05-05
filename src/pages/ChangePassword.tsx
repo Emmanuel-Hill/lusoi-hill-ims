@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import {
@@ -41,9 +42,11 @@ const ChangePassword = () => {
     }
 
     if (currentUser) {
-      const changed = changeUserPassword(oldPassword, newPassword);
+      // Call changeUserPassword and explicitly check if it returns true
+      const result = changeUserPassword(oldPassword, newPassword);
       
-      if (changed) {
+      // Handle the result based on explicit boolean check
+      if (result === true) {
         setSuccess('Password changed successfully');
         setOldPassword('');
         setNewPassword('');
