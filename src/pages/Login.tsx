@@ -33,8 +33,7 @@ const Login = () => {
     setTimeout(() => {
       const user = authenticateUser(email, password);
       
-      // Check if user exists and is an object
-      if (user && typeof user === 'object' && 'name' in user) {
+      if (user) {
         toast({
           title: "Login successful",
           description: `Welcome, ${user.name}!`,
@@ -42,10 +41,8 @@ const Login = () => {
         
         // Check if it's initial login
         if (typeof isInitialLogin === 'function' && user.id) {
-          // Call isInitialLogin with the user ID
           const initialLoginStatus = isInitialLogin(user.id);
           
-          // Check if initialLoginStatus is true
           if (initialLoginStatus === true) {
             navigate('/change-password');
           } else {
