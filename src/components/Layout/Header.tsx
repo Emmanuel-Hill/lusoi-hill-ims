@@ -1,17 +1,9 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Menu, ChevronDown, LogOut } from 'lucide-react';
+import { Menu, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppContext } from '@/context/AppContext';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import { toast } from 'sonner';
 import UserMenu from '../Navigation/UserMenu';
 
 interface HeaderProps {
@@ -20,16 +12,7 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ isSidebarOpen, setIsSidebarOpen }) => {
-  const { users, currentUser, setCurrentUser } = useAppContext();
-  
-  // Handle user switch
-  const handleUserSwitch = (userId: string) => {
-    const userToSwitch = users.find(user => user.id === userId);
-    if (userToSwitch) {
-      setCurrentUser(userToSwitch);
-      toast.success(`Switched to ${userToSwitch.name}`);
-    }
-  };
+  const { users, currentUser } = useAppContext();
   
   return (
     <div className="bg-white border-b border-gray-200 shadow-sm">
@@ -47,20 +30,8 @@ const Header: React.FC<HeaderProps> = ({ isSidebarOpen, setIsSidebarOpen }) => {
         </div>
         
         <div className="flex items-center space-x-4">
-          {/* User info - desktop view */}
-          <div className="hidden md:flex items-center border-r border-gray-200 pr-4">
-            <div className="text-right mr-2">
-              <p className="font-medium text-sm text-black">{currentUser?.role || 'User'}</p>
-              <p className="text-xs text-gray-500">{currentUser?.email || 'user@example.com'}</p>
-            </div>
-            <ChevronDown className="h-4 w-4 text-gray-500" />
-          </div>
-          
-          {/* Logout button */}
-          <Button variant="outline" size="sm" className="text-red-500 hover:bg-red-50 hover:text-red-600 border-red-200">
-            <LogOut className="h-4 w-4 mr-1" />
-            Logout
-          </Button>
+          {/* User Menu Component */}
+          <UserMenu />
         </div>
       </div>
     </div>
