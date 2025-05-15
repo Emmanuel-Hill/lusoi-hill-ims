@@ -1,15 +1,6 @@
 
 import { useState } from 'react';
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  password: string;
-  role: string;
-  initialLoginComplete?: boolean;
-  moduleAccess?: Record<string, boolean>;
-}
+import { ModuleAccess, User, UserRole } from '@/types';
 
 export const useUserState = (initialUsers: User[] = []) => {
   const [users, setUsers] = useState<User[]>(initialUsers);
@@ -60,7 +51,7 @@ export const useUserState = (initialUsers: User[] = []) => {
 
   const hasAccess = (module: string): boolean => {
     if (!currentUser || !currentUser.moduleAccess) return false;
-    return currentUser.moduleAccess[module] || false;
+    return !!currentUser.moduleAccess[module as keyof ModuleAccess];
   };
 
   return {
