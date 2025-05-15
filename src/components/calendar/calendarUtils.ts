@@ -2,6 +2,7 @@
 import { format, parseISO, isValid } from 'date-fns';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 import { CalendarEvent } from './types';
 
 // Format date for display in calendar
@@ -19,7 +20,8 @@ export const formatCalendarDate = (dateString: string): string => {
 // Group events by date for list view
 export const groupEventsByDate = (events: CalendarEvent[]): Record<string, CalendarEvent[]> => {
   return events.reduce((acc, event) => {
-    const date = format(parseISO(event.date), 'yyyy-MM-dd');
+    // Convert Date object to string format
+    const date = format(new Date(event.date), 'yyyy-MM-dd');
     if (!acc[date]) {
       acc[date] = [];
     }
@@ -57,9 +59,9 @@ export const exportCalendarToPdf = (events: CalendarEvent[], month: string): voi
     }
     
     acc[event.type].push([
-      format(parseISO(event.date), 'MMM d, yyyy'),
+      format(new Date(event.date), 'MMM d, yyyy'),
       event.title,
-      event.description || '',
+      event.detail || '',  // Use detail instead of description
     ]);
     
     return acc;
@@ -101,6 +103,7 @@ export const exportCalendarToPdf = (events: CalendarEvent[], month: string): voi
 export const getEventColor = (eventType: string): string => {
   switch (eventType.toLowerCase()) {
     case 'egg':
+    case 'egg-collection':
       return 'bg-green-200 border-green-500';
     case 'feed':
       return 'bg-yellow-200 border-yellow-500';
@@ -115,4 +118,48 @@ export const getEventColor = (eventType: string): string => {
     default:
       return 'bg-gray-200 border-gray-500';
   }
+};
+
+// Export calendar events to Excel
+export const exportToExcel = (date: Date, events: CalendarEvent[]): void => {
+  // Filter events for the current month if needed
+  const currentMonth = date.getMonth();
+  const currentYear = date.getFullYear();
+  
+  const monthEvents = events.filter(event => {
+    const eventDate = new Date(event.date);
+    return eventDate.getMonth() === currentMonth && eventDate.getFullYear() === currentYear;
+  });
+  
+  // Prepare data for Excel
+  const excelData = monthEvents.map(event => ({
+    Date: format(new Date(event.date), 'yyyy-MM-dd'),
+    Type: event.title,
+    Details: event.detail || '',
+  }));
+  
+  // Create a new workbook
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.json_to_sheet(excelData);
+  
+  // Add the worksheet to the workbook
+  XLSX.utils.book_append_sheet(wb, ws, 'Calendar Events');
+  
+  // Save the Excel file
+  XLSX.writeFile(wb, `farm-calendar-${format(date, 'yyyy-MM')}.xlsx`);
+};
+
+// Export calendar events to PDF
+export const exportToPDF = (date: Date, events: CalendarEvent[]): void => {
+  // Filter events for the current month
+  const currentMonth = date.getMonth();
+  const currentYear = date.getFullYear();
+  
+  const monthEvents = events.filter(event => {
+    const eventDate = new Date(event.date);
+    return eventDate.getMonth() === currentMonth && eventDate.getFullYear() === currentYear;
+  });
+  
+  // Export to PDF using the existing function
+  exportCalendarToPdf(monthEvents, format(date, 'MMMM yyyy'));
 };

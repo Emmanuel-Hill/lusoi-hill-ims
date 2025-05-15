@@ -27,7 +27,7 @@ const CalendarPage = () => {
 
   // Filter events by the selected day and type
   const filteredEvents = allEvents.filter(event => {
-    const sameDay = isSameDay(event.date, date);
+    const sameDay = isSameDay(new Date(event.date), date);
     return sameDay && (eventFilter === 'all' || event.type === eventFilter);
   });
 
